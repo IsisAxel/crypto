@@ -71,19 +71,29 @@ AFTER INSERT ON transaction_fond
 FOR EACH ROW
 EXECUTE FUNCTION update_fond();
 
--- Fonction pour mettre à jour le portefeuille
 CREATE OR REPLACE FUNCTION update_portefeuille()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF (NEW.id_type = 1) THEN -- Supposons que id_type = 1 correspond à un achat de crypto
+    -- Vérifier si un portefeuille existe déjà pour l'utilisateur et la crypto
+    IF EXISTS (
+        SELECT 1 
+        FROM protefeuille 
+        WHERE id_crypto = NEW.id_crypto AND id_utilisateur = NEW.id_utilisateur
+    ) THEN
+        -- Si le portefeuille existe, mettre à jour la quantité
+        IF (NEW.id_type = 1) THEN -- Achat de crypto
+            UPDATE protefeuille
+            SET quantite = quantite + NEW.cour
+            WHERE id_crypto = NEW.id_crypto AND id_utilisateur = NEW.id_utilisateur;
+        ELSIF (NEW.id_type = 2) THEN -- Vente de crypto
+            UPDATE protefeuille
+            SET quantite = quantite - NEW.cour
+            WHERE id_crypto = NEW.id_crypto AND id_utilisateur = NEW.id_utilisateur;
+        END IF;
+    ELSE
+        -- Si le portefeuille n'existe pas, insérer un nouvel enregistrement
         INSERT INTO protefeuille (id_crypto, id_utilisateur, quantite)
-        VALUES (NEW.id_crypto, NEW.id_utilisateur, NEW.cour)
-        ON CONFLICT (id_crypto, id_utilisateur) -- Gérer les conflits si l'entrée existe déjà
-        DO UPDATE SET quantite = protefeuille.quantite + NEW.cour;
-    ELSIF (NEW.id_type = 2) THEN -- Supposons que id_type = 2 correspond à une vente de crypto
-        UPDATE protefeuille
-        SET quantite = quantite - NEW.cour
-        WHERE id_crypto = NEW.id_crypto AND id_utilisateur = NEW.id_utilisateur;
+        VALUES (NEW.id_crypto, NEW.id_utilisateur, NEW.cour);
     END IF;
     RETURN NEW;
 END;
@@ -94,3 +104,4 @@ CREATE TRIGGER trigger_update_portefeuille
 AFTER INSERT ON transaction_crypto
 FOR EACH ROW
 EXECUTE FUNCTION update_portefeuille();
+
