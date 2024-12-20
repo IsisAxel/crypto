@@ -18,8 +18,8 @@ CREATE TABLE cour(
 );
 
 
-CREATE TABLE protefeuille(
-    id_protefeuille SERIAL PRIMARY KEY,
+CREATE TABLE portefeuille(
+    id_portefeuille SERIAL PRIMARY KEY,
     id_crypto INT REFERENCES crypto(id_crypto),
     id_utilisateur INT REFERENCES utilisateur(id_utilisateur),
     quantite NUMERIC
