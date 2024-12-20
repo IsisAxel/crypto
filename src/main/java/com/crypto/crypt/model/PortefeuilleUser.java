@@ -4,7 +4,7 @@ import com.crypto.crypt.model.tiers.CryptoValeur;
 
 import java.util.List;
 
-public class Portefeuille {
+public class PortefeuilleUser {
     private Utilisateur utilisateur;
     private List<CryptoValeur> cryptoValeurs;
 
