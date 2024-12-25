@@ -1,8 +1,11 @@
 package com.crypto.crypt.model;
 
+import org.entityframework.tools.Primary;
+
 public class Crypto {
+    @Primary
     private int id_crypto;
-    private int nom;
+    private String nom;
 
     public int getId_crypto() {
         return id_crypto;
@@ -12,11 +15,11 @@ public class Crypto {
         this.id_crypto = id_crypto;
     }
 
-    public int getNom() {
+    public String getNom() {
         return nom;
     }
 
-    public void setNom(int nom) {
+    public void setNom(String nom) {
         this.nom = nom;
     }
 }
