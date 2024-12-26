@@ -15,8 +15,22 @@ CREATE TABLE sessionUser(
 
 CREATE TABLE crypto(
     id_crypto SERIAL PRIMARY KEY,
-    nom VARCHAR(100) NOT NULL
+    nom VARCHAR(100) NOT NULL,
+    unit_nom VARCHAR(10) NOT NULL,
+    logo VARCHAR(50)
 );
+
+INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Bitcoin', 'BTC', 'BTC.png');
+INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Wrapped Bitcoin', 'WBTC', 'WBTC.png');
+INSERT INTO crypto (nom, unit_nom, logo) VALUES ('yearn.finance', 'YFI', 'YFI.png');
+INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Wrapped Beacon ETH (WBETH)', 'WBETH', 'WBETH.png');
+INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Ethereum', 'ETH', 'ETH.png');
+INSERT INTO crypto (nom, unit_nom, logo) VALUES ('PAX Gold', 'PAXG', 'PAXG.png');
+INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Litecoin', 'LTC', 'LTC.png');
+INSERT INTO crypto (nom, unit_nom, logo) VALUES ('BNB', 'BNB', 'BNB.png');
+INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Bittensor', 'TAO', 'TAO.png');
+INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Bitcoin Cash', 'BCH', 'BCH.png');
+
 
 CREATE TABLE cour(
     id_cour SERIAL PRIMARY KEY,
