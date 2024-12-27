@@ -2,6 +2,7 @@ CREATE TABLE utilisateur(
     id_utilisateur SERIAL PRIMARY KEY,
     f_id INT, 
     nom VARCHAR(250),
+    email VARCHAR(100),
     monnaie NUMERIC DEFAULT 0
 );
 
@@ -52,11 +53,15 @@ CREATE TABLE type(
     etat VARCHAR(10) NOT NULL
 );
 
+insert into type (etat) values ('up');
+insert into type (etat) values ('down');
+
 CREATE TABLE transaction_crypto (
     id_transaction_crypto SERIAL PRIMARY KEY,
     id_crypto INT REFERENCES crypto(id_crypto),
     id_utilisateur INT REFERENCES utilisateur(id_utilisateur),
     cour NUMERIC,
+    qtty NUMERIC NOT NULL,
     date_action TIMESTAMP NOT NULL,
     id_type INT REFERENCES type(id_type)
 );

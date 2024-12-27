@@ -1,8 +1,11 @@
 package com.crypto.crypt.model.tiers;
 
+import org.entityframework.tools.Primary;
+
 import com.crypto.crypt.model.Crypto;
 
 public class Portefeuille {
+    @Primary(auto = true)
     private int id_portefeuille;
     private Crypto crypto;
     private int id_utilisateur;

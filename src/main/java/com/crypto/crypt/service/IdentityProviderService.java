@@ -104,14 +104,15 @@ public class IdentityProviderService {
 
             int f_id = userObject.getInt("idUser");
             String nom = userObject.getString("username");
+            String email = userObject.getString("email");
 
-            Utilisateur user = new Utilisateur(f_id, nom);
+            Utilisateur user = new Utilisateur(f_id, nom, email);
             try (UserService userService = new UserService()) {
                 userService.beginTransaction();
 
                 int id_utilisateur = userService.saveUser(user);
 
-                String token = jwtUtil.generateToken(nom);
+                String token = jwtUtil.generateToken(String.valueOf(id_utilisateur));
                 String f_token = dataObject.getString("token");
                 Timestamp expiration = jwtUtil.getInstantExpiration();
 
@@ -147,10 +148,10 @@ public class IdentityProviderService {
 
             int f_id = userObject.getInt("idUser");
             try (UserService userService = new UserService()) {
-                Utilisateur user = userService.findUtilisateur(f_id);
-                int id_utilisateur = userService.saveUser(user);
+                Utilisateur user = userService.findUtilisateurF(f_id);
+                int id_utilisateur = user.getId_utilisateur();
 
-                String token = jwtUtil.generateToken(user.getNom());
+                String token = jwtUtil.generateToken(String.valueOf(id_utilisateur));
                 String f_token = dataObject.getString("token");
                 Timestamp expiration = jwtUtil.getInstantExpiration();
 

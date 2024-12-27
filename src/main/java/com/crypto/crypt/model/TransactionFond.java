@@ -2,10 +2,17 @@ package com.crypto.crypt.model;
 
 import java.sql.Timestamp;
 
+import org.entityframework.tools.Col;
+import org.entityframework.tools.Primary;
+import org.entityframework.tools.Table;
+
+@Table(name = "transaction_fond")
 public class TransactionFond {
+    @Primary(auto = true)
     private int id_transaction_fond;
+    @Col(name = "id_type", reference = "actif")
     private Type type;
-    private Utilisateur utilisateur;
+    private int id_utilisateur;
     private double valeur;
     private Timestamp date_action;
 
@@ -25,12 +32,12 @@ public class TransactionFond {
         this.type = type;
     }
 
-    public Utilisateur getUtilisateur() {
-        return utilisateur;
+    public int getIdUtilisateur() {
+        return id_utilisateur;
     }
 
-    public void setUtilisateur(Utilisateur utilisateur) {
-        this.utilisateur = utilisateur;
+    public void setIdUtilisateur(int id) {
+        this.id_utilisateur = id;
     }
 
     public double getValeur() {

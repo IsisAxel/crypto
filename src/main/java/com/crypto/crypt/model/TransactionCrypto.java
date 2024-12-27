@@ -2,13 +2,23 @@ package com.crypto.crypt.model;
 
 import java.sql.Timestamp;
 
+import org.entityframework.tools.Col;
+import org.entityframework.tools.Primary;
+import org.entityframework.tools.Table;
+
+@Table(name = "transaction_crypto")
 public class TransactionCrypto {
+    @Primary(auto = true)
     private int id_transaction_crypto;
+    @Col(name = "id_crypto" , reference = "actif")
     private Crypto crypto;
-    private Utilisateur utilisateur;
+    private int id_utilisateur;
     private double cour;
     private Timestamp date_action;
+    @Col(name = "id_type" , reference = "actif")
     private Type type;
+    private double qtty;
+
 
     public int getId_transaction_crypto() {
         return id_transaction_crypto;
@@ -26,12 +36,12 @@ public class TransactionCrypto {
         this.crypto = crypto;
     }
 
-    public Utilisateur getUtilisateur() {
-        return utilisateur;
+    public int getIdUtilisateur() {
+        return id_utilisateur;
     }
 
-    public void setUtilisateur(Utilisateur utilisateur) {
-        this.utilisateur = utilisateur;
+    public void setIdUtilisateur(int id_utilisateur) {
+        this.id_utilisateur = id_utilisateur;
     }
 
     public double getCour() {
@@ -56,5 +66,13 @@ public class TransactionCrypto {
 
     public void setType(Type type) {
         this.type = type;
+    }
+
+    public double getQtty() {
+        return qtty;
+    }
+
+    public void setQtty(double qtty) {
+        this.qtty = qtty;
     }
 }

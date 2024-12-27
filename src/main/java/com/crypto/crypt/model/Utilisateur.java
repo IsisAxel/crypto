@@ -1,5 +1,8 @@
 package com.crypto.crypt.model;
 
+import java.util.List;
+
+import org.entityframework.tools.Col;
 import org.entityframework.tools.Primary;
 
 public class Utilisateur {
@@ -7,14 +10,49 @@ public class Utilisateur {
     private int id_utilisateur;
     private int f_id;
     private String nom;
+    private String email;
     private double monnaie;
+
+    @Col(isTransient = true)
+    private PortefeuilleUser portefeuille;
+
+    @Col(isTransient = true)
+    private List<TransactionFond> transactionFond;
+
+    @Col(isTransient = true)
+    private List<TransactionCrypto> transactionCryptos;
+
+    public List<TransactionCrypto> getTransactionCryptos() {
+        return transactionCryptos;
+    }
+
+    public void setTransactionCryptos(List<TransactionCrypto> transactionCryptos) {
+        this.transactionCryptos = transactionCryptos;
+    }
+
+    public List<TransactionFond> getTransactionFond() {
+        return transactionFond;
+    }
+
+    public void setTransactionFond(List<TransactionFond> transactionFond) {
+        this.transactionFond = transactionFond;
+    }
+
+    public PortefeuilleUser getPortefeuille() {
+        return portefeuille;
+    }
+
+    public void setPortefeuille(PortefeuilleUser portefeuille) {
+        this.portefeuille = portefeuille;
+    }
 
     public Utilisateur() {}
 
-    public Utilisateur(int f_id, String nom) {
+    public Utilisateur(int f_id, String nom, String email) {
         setF_id(f_id);
         setNom(nom);
         setMonnaie(0);
+        setEmail(email);
     }
 
     public int getId_utilisateur() {
@@ -47,5 +85,13 @@ public class Utilisateur {
 
     public void setF_id(int f_id) {
         this.f_id = f_id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

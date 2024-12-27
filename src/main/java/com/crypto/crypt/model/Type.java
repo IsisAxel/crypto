@@ -1,6 +1,9 @@
 package com.crypto.crypt.model;
 
+import org.entityframework.tools.Primary;
+
 public class Type {
+    @Primary
     private int id_type;
     private String etat;
 

@@ -6,9 +6,15 @@ import com.crypto.crypt.model.tiers.Portefeuille;
 
 import java.util.List;
 
+import org.entityframework.client.GenericEntity;
+
 public class CryptoService extends Service{
     public CryptoService() {
         super();
+    }
+
+    public CryptoService(GenericEntity ng) {
+        super(ng.getConnection());
     }
 
     public List<Crypto> getAllCrypto() throws Exception {

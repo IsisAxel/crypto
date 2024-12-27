@@ -19,7 +19,7 @@ public class Service implements AutoCloseable {
         }
     }
 
-    public Service(Connection connection) throws Exception {
+    public Service(Connection connection) {
         try {
             this.ngContext = new GenericEntity(connection);
         } catch (Exception e) {
