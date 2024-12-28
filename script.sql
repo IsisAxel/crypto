@@ -75,6 +75,12 @@ CREATE TABlE transaction_fond(
     date_action TIMESTAMP NOT NULL
 );
 
+CREATE table key_validation_email (
+    id_validation SERIAL PRIMARY KEY,
+    email VARCHAR(100) REFERENCES utilisateur(email), 
+    key TEXT NOT NULL
+);
+
 -- Fonction pour mettre à jour les fonds
 CREATE OR REPLACE FUNCTION update_fond()
 RETURNS TRIGGER AS $$
@@ -96,7 +102,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_update_fond
 AFTER INSERT ON transaction_fond
 FOR EACH ROW
-EXECUTE FUNCTION update_fond();
+EXECUTE PROCEDURE update_fond();
 
 CREATE OR REPLACE FUNCTION update_portefeuille()
 RETURNS TRIGGER AS $$

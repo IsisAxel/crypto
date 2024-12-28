@@ -10,12 +10,12 @@ import org.entityframework.tools.Table;
 public class TransactionCrypto {
     @Primary(auto = true)
     private int id_transaction_crypto;
-    @Col(name = "id_crypto" , reference = "actif")
+    @Col(name = "id_crypto" , reference = "id_type")
     private Crypto crypto;
     private int id_utilisateur;
     private double cour;
     private Timestamp date_action;
-    @Col(name = "id_type" , reference = "actif")
+    @Col(name = "id_type" , reference = "id_type")
     private Type type;
     private double qtty;
 

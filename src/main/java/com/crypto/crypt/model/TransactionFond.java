@@ -10,8 +10,10 @@ import org.entityframework.tools.Table;
 public class TransactionFond {
     @Primary(auto = true)
     private int id_transaction_fond;
-    @Col(name = "id_type", reference = "actif")
+
+    @Col(name = "id_type", reference = "id_type")
     private Type type;
+
     private int id_utilisateur;
     private double valeur;
     private Timestamp date_action;
