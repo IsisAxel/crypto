@@ -10,7 +10,6 @@ import com.crypto.crypt.model.tiers.SessionUser;
 import com.crypto.crypt.model.tiers.ValidationKey;
 
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Random;
@@ -81,11 +80,11 @@ public class UserService extends Service {
     }
 
      public List<TransactionCrypto> getAllTransactionCrypto(int id) throws Exception {
-        return getNgContext().findWhereArgs(TransactionCrypto.class, "id_utilisateur = ?", id);
+        return getNgContext().findWhereArgs(TransactionCrypto.class, "id_utilisateur = ? order by date_action desc", id);
     }
 
     public List<TransactionFond> getAllTransactionFond(int id) throws Exception {
-        return getNgContext().findWhereArgs(TransactionFond.class, "id_utilisateur = ?", id);
+        return getNgContext().findWhereArgs(TransactionFond.class, "id_utilisateur = ? order by date_action desc", id);
     }
 
     public Utilisateur findUtilisateurF(int f_id) throws Exception {
