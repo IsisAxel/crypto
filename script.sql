@@ -140,30 +140,34 @@ EXECUTE FUNCTION update_portefeuille();
 
 
 
-CREATE OR REPLACE FUNCTION generer_cours_crypto(valeur_min DOUBLE PRECISION, valeur_max DOUBLE PRECISION)
+CREATE OR REPLACE FUNCTION generer_cours_crypto()
 RETURNS VOID AS $$
 DECLARE
-crypto RECORD;
-    nouvelle_valeur DOUBLE PRECISION;
+    crypto RECORD;
+    dernier_cours RECORD;
+    variation DOUBLE PRECISION;
 BEGIN
-    -- Vérifier que les valeurs min et max sont valides
-    IF valeur_min >= valeur_max THEN
-        RAISE EXCEPTION 'La valeur minimale doit être inférieure à la valeur maximale.';
-END IF;
+    FOR crypto IN
+        SELECT id_crypto, nom FROM crypto
+    LOOP
+        SELECT valeur INTO dernier_cours FROM cour
+        WHERE id_crypto = crypto.id_crypto
+        ORDER BY date_changement DESC
+        LIMIT 1;
 
-    -- Boucle pour chaque crypto dans la table
-FOR crypto IN
-SELECT id_crypto, nom FROM crypto
-                               LOOP
-                           -- Générer une valeur aléatoire entre valeur_min et valeur_max
-    nouvelle_valeur := valeur_min + (valeur_max - valeur_min) * random();
+        IF NOT FOUND THEN
+            dernier_cours.valeur := 10000;
+        END IF;
 
--- Insérer le nouveau cours dans la table cour
-INSERT INTO cour (id_crypto, valeur, date_changement)
-VALUES (crypto.id_crypto, nouvelle_valeur, NOW());
-END LOOP;
+        variation := (random() * 0.04) - 0.02; 
+        dernier_cours.valeur := dernier_cours.valeur * (1 + variation);
+
+        INSERT INTO cour (id_crypto, valeur, date_changement)
+        VALUES (crypto.id_crypto, dernier_cours.valeur, NOW());
+    END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
 
 
 CREATE OR REPLACE VIEW vue_dernier_cours AS

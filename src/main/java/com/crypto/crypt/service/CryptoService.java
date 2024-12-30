@@ -54,7 +54,7 @@ public class CryptoService extends Service{
     }
 
     public void generateCours(double min, double max) throws Exception {
-        getNgContext().execute("SELECT generer_cours_crypto(?, ?)", min, max);
+        getNgContext().execute("SELECT generer_cours_crypto()");
     }
 
     public Object getCryptoData(int idCrypto, int limit) throws Exception {
