@@ -2,6 +2,7 @@ package com.crypto.crypt.service;
 
 import com.crypto.crypt.model.*;
 import com.crypto.crypt.model.tiers.CryptoValeur;
+import com.crypto.crypt.model.tiers.DataChart;
 import com.crypto.crypt.model.tiers.Portefeuille;
 
 import java.util.List;
@@ -54,5 +55,9 @@ public class CryptoService extends Service{
 
     public void generateCours(double min, double max) throws Exception {
         getNgContext().execute("SELECT generer_cours_crypto(?, ?)", min, max);
+    }
+
+    public Object getCryptoData(int idCrypto, int limit) throws Exception {
+        return getNgContext().executeToList(DataChart.class, "select valeur, date_changement from cour where id_crypto = ? limit ?", idCrypto, limit);
     }
 }

@@ -17,7 +17,7 @@ public class SocketService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Scheduled(fixedRate = 10000000)
+    @Scheduled(fixedRate = 2000)
     public void generateAndBroadcastCours() {
         try {
             repository.generateCours(30000, 60000); 
