@@ -30,6 +30,13 @@
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
+
+		<dependency>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>javax.mail</artifactId>
+			<version>1.6.2</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -85,10 +92,6 @@
 			<artifactId>aspectjweaver</artifactId>
 			<version>1.9.22</version> <!-- Vous pouvez utiliser une version plus récente si disponible -->
 		</dependency>
-
-
-
-
 	</dependencies>
 
 	<build>

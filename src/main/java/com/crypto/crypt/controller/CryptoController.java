@@ -1,5 +1,6 @@
 package com.crypto.crypt.controller;
 
+import com.crypto.crypt.model.Cour;
 import com.crypto.crypt.model.Crypto;
 import com.crypto.crypt.service.CryptoService;
 import org.entityframework.dev.ApiResponse;
@@ -19,6 +20,19 @@ public class CryptoController {
     public ResponseEntity<ApiResponse> getAllCrypto() {
         try (CryptoService cryptoService = new CryptoService()) {
             List<Crypto> files = cryptoService.getAllCrypto();
+            ApiResponse response = new ApiResponse(true, files, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @GetMapping("/cour")
+    public ResponseEntity<ApiResponse> dernierCour() {
+        try (CryptoService cryptoService = new CryptoService()) {
+            List<Cour> files = cryptoService.dernierCours();
             ApiResponse response = new ApiResponse(true, files, null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {

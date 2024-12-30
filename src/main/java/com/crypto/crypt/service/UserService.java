@@ -19,6 +19,13 @@ public class UserService extends Service {
         super();
     }
 
+    public void logout(String token, int id) throws Exception {
+        List<SessionUser> s = getNgContext().findWhereArgs(SessionUser.class, "token = ?", token);
+        if (!s.isEmpty()) {
+            getNgContext().delete(s.get(0));
+        }
+    }
+
     public void depot(Utilisateur u, double valeur) throws Exception {
         Type up = getNgContext().findById(1, Type.class);
 
@@ -138,6 +145,15 @@ public class UserService extends Service {
         vKey.setEmail(u.getEmail());
         vKey.setKey(generateHash());
 
+        String validationHtml = MailService.generateEmailHtml(vKey.getKey());
+        try {
+            MailService.sendEmail(u.getEmail(), validationHtml);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Erreur d'envoi de l'email");
+        }
+        
+        getNgContext().executeUpdate("delete from key_validation_email where email = ?", u.getEmail());
         getNgContext().save(vKey);
     }
 
