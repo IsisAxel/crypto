@@ -159,7 +159,7 @@ BEGIN
             dernier_cours.valeur := 10000;
         END IF;
 
-        variation := (random() * 0.04) - 0.02; 
+        variation := (random() * 0.02) - 0.01; 
         dernier_cours.valeur := dernier_cours.valeur * (1 + variation);
 
         INSERT INTO cour (id_crypto, valeur, date_changement)

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.crypto.crypt.conf.JwtUtil;
 import com.crypto.crypt.model.Utilisateur;
 import com.crypto.crypt.model.dto.TransactionFondDTO;
+import com.crypto.crypt.model.tiers.Portefeuille;
 import com.crypto.crypt.service.UserService;
 
 @RestController
@@ -79,6 +80,22 @@ public class UserController {
 
             uService.logout(token, id);
             ApiResponse response = new ApiResponse(true, "", null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @GetMapping("/wallet/{idCrypto}")
+    public ResponseEntity<ApiResponse> getWallet(@RequestHeader("Authorization") String authorizationHeader, @PathVariable int idCrypto) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+
+            Portefeuille p = uService.getUserWallet(id, idCrypto);
+            ApiResponse response = new ApiResponse(true, p, null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();

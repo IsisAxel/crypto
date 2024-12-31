@@ -6,6 +6,7 @@ import com.crypto.crypt.model.TransactionFond;
 import com.crypto.crypt.model.Type;
 import com.crypto.crypt.model.Utilisateur;
 import com.crypto.crypt.model.dto.TransactionFondDTO;
+import com.crypto.crypt.model.tiers.Portefeuille;
 import com.crypto.crypt.model.tiers.SessionUser;
 import com.crypto.crypt.model.tiers.ValidationKey;
 
@@ -136,6 +137,16 @@ public class UserService extends Service {
         }
 
         return u;
+    }
+
+    public Portefeuille getUserWallet(int idUser , int idCrypto) throws Exception {
+        List<Portefeuille> portefeuilles = getNgContext().findWhereArgs(Portefeuille.class, "id_utilisateur = ? and id_crypto = ?", idUser, idCrypto);
+
+        if (portefeuilles.isEmpty()) {
+            throw new Exception("Crypto id invalid");
+        }
+
+        return portefeuilles.get(0);
     }
 
     public void requestValidation(int id) throws Exception {

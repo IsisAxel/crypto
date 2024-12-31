@@ -5,6 +5,7 @@ import com.crypto.crypt.model.tiers.CryptoValeur;
 import com.crypto.crypt.model.tiers.DataChart;
 import com.crypto.crypt.model.tiers.Portefeuille;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.entityframework.client.GenericEntity;
@@ -58,6 +59,9 @@ public class CryptoService extends Service{
     }
 
     public Object getCryptoData(int idCrypto, int limit) throws Exception {
-        return getNgContext().executeToList(DataChart.class, "select valeur, date_changement from cour where id_crypto = ? limit ?", idCrypto, limit);
+        List<DataChart> dc = getNgContext().executeToList(DataChart.class, "select valeur, date_changement from cour where id_crypto = ? order by date_changement desc limit ?", idCrypto, limit);
+        Collections.reverse(dc);
+
+        return dc;
     }
 }
