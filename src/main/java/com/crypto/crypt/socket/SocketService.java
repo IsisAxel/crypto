@@ -17,11 +17,12 @@ public class SocketService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 10000)
     public void generateAndBroadcastCours() {
         try {
             repository.generateCours(30000, 60000); 
             List<Cour> derniersCours = repository.dernierCours();
+
             String message = objectMapper.writeValueAsString(derniersCours);
 
             webSocketHandler.sendMessage(message);

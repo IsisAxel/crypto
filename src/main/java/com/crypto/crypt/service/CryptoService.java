@@ -28,14 +28,15 @@ public class CryptoService extends Service{
     }
 
     public PortefeuilleUser getPortefeuilleUser(int idUser) throws Exception {
-        List<Crypto> cryptoList = getAllCrypto();
-
         List<Portefeuille> portefeuilles = getNgContext().findWhereArgs(Portefeuille.class, "id_utilisateur = ?", idUser);
         PortefeuilleUser portefeuilleUser = new PortefeuilleUser();
         portefeuilleUser.setUtilisateur(getNgContext().findById(idUser, Utilisateur.class));
 
-        for (Crypto crypto : cryptoList) {
+        List<Cour> cours = dernierCours();
+        for (Cour cour : cours) {
             CryptoValeur vl = new CryptoValeur();
+
+            Crypto crypto = cour.getCrypto();
             vl.setCrypto(crypto);
             vl.setValeur(0);
             for (Portefeuille portefeuille : portefeuilles) {
@@ -44,6 +45,8 @@ public class CryptoService extends Service{
                     break;
                 }
             }
+
+            vl.setEstimation(cour.getValeur() * vl.getValeur());
             portefeuilleUser.addCryptoValeur(vl);
         }
 

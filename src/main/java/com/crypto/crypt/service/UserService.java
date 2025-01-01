@@ -1,5 +1,6 @@
 package com.crypto.crypt.service;
 
+import com.crypto.crypt.model.Crypto;
 import com.crypto.crypt.model.PortefeuilleUser;
 import com.crypto.crypt.model.TransactionCrypto;
 import com.crypto.crypt.model.TransactionFond;
@@ -14,6 +15,8 @@ import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Random;
+
+import org.entityframework.error.EntityNotFoundException;
 
 public class UserService extends Service {
     public UserService() {
@@ -140,10 +143,28 @@ public class UserService extends Service {
     }
 
     public Portefeuille getUserWallet(int idUser , int idCrypto) throws Exception {
+        Crypto crypto = null;
+        try {
+            crypto = getNgContext().findById(idCrypto, Crypto.class);
+        } catch (Exception e) {
+            if (e instanceof EntityNotFoundException) {
+                throw new Exception("Crypto id invalid");
+            }
+            throw e;
+        }
+       
         List<Portefeuille> portefeuilles = getNgContext().findWhereArgs(Portefeuille.class, "id_utilisateur = ? and id_crypto = ?", idUser, idCrypto);
 
-        if (portefeuilles.isEmpty()) {
+       if (crypto == null) {
             throw new Exception("Crypto id invalid");
+       }
+            
+        if (portefeuilles.isEmpty()) {
+            Portefeuille p = new Portefeuille();
+            p.setId_utilisateur(idUser);
+            p.setCrypto(crypto);
+            p.setQuantite(0.0);
+            return p;
         }
 
         return portefeuilles.get(0);

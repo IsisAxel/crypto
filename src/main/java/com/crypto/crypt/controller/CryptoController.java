@@ -43,7 +43,7 @@ public class CryptoController {
         }
     }
 
-    //@TokenRequired
+    @TokenRequired
     @GetMapping("/cour/{idCrypto}")
     public ResponseEntity<ApiResponse> data(@PathVariable int idCrypto, @RequestParam int limit) {
         try (CryptoService cryptoService = new CryptoService()) {
