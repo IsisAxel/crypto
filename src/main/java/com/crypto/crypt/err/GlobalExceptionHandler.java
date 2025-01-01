@@ -10,7 +10,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TokenValidationException.class)
     public ResponseEntity<ApiResponse> handleTokenValidationException(TokenValidationException ex) {
-        return ResponseEntity.internalServerError().body(ApiResponse.Of(ex));
+        ApiResponse api = new ApiResponse(false, false, "false");
+        return ResponseEntity.internalServerError().body(api);
     }
 
     @ExceptionHandler(Exception.class)

@@ -39,7 +39,7 @@ public class TokenRequiredAspect {
         String token = authorizationHeader.substring(7);
 
         if (!validateToken(token, authorizedRole)) {
-            throw new TokenValidationException("Accès refusé : token invalide");
+            throw new TokenValidationException("Accès refusé : token invalide ou expiré");
         }
     }
 
