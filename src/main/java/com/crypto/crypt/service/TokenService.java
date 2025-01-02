@@ -18,6 +18,7 @@ public class TokenService extends Service {
         }
 
         SessionUser session = sessions.get(0);
+        System.out.println("Expiration = " + session.getExpiration());
 
         // if (System.currentTimeMillis() > session.getExpiration().getTime()) {
         //     return false;

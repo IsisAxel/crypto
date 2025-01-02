@@ -17,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/crypto")
 public class CryptoController {
+    
     @TokenRequired
     @GetMapping
     public ResponseEntity<ApiResponse> getAllCrypto() {
