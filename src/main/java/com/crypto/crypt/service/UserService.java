@@ -1,12 +1,16 @@
 package com.crypto.crypt.service;
 
+import com.crypto.crypt.model.Cour;
 import com.crypto.crypt.model.Crypto;
 import com.crypto.crypt.model.PortefeuilleUser;
 import com.crypto.crypt.model.TransactionCrypto;
 import com.crypto.crypt.model.TransactionFond;
 import com.crypto.crypt.model.Type;
 import com.crypto.crypt.model.Utilisateur;
+import com.crypto.crypt.model.dto.FeedbackDTO;
+import com.crypto.crypt.model.dto.TransactionCryptoDTO;
 import com.crypto.crypt.model.dto.TransactionFondDTO;
+import com.crypto.crypt.model.tiers.Feedback;
 import com.crypto.crypt.model.tiers.Portefeuille;
 import com.crypto.crypt.model.tiers.SessionUser;
 import com.crypto.crypt.model.tiers.ValidationKey;
@@ -58,18 +62,26 @@ public class UserService extends Service {
         getNgContext().save(transactionFond);
     }
 
-    public void transaction(String type, TransactionFondDTO data) throws Exception {
-        List<ValidationKey> validationKeys = getNgContext().findWhereArgs(ValidationKey.class, "key = ?", data.getKey());
+    private void verifiateKey(String key, String email) throws Exception {
+        List<ValidationKey> validationKeys = getNgContext().findWhereArgs(ValidationKey.class, "key = ?", key);
 
         if (validationKeys.isEmpty()) {
             throw new Exception("Clé Invalide");
         }
-
-        Utilisateur u = findUtilisateurByEmail(data.getEmail());
+        
         ValidationKey vKey = validationKeys.get(0);
 
-        if (!vKey.getEmail().equals(data.getEmail())) {
+        if (!vKey.getEmail().equals(email)) {
             throw new Exception("Clé Invalide");
+        }
+    }
+
+    public void transaction(int idUser, String type, TransactionFondDTO data) throws Exception {
+        verifiateKey(data.getKey(), data.getEmail());
+        Utilisateur u = findUtilisateurByEmail(data.getEmail());
+
+        if (u.getId_utilisateur() != idUser) {
+            throw new Exception("Unauthorized transaction");
         }
         
         if (type.equalsIgnoreCase("depot")) {
@@ -78,8 +90,6 @@ public class UserService extends Service {
         } else if (type.equalsIgnoreCase("retrait")) {
             retrait(u, data.getSolde());
         }
-
-        //getNgContext().delete(validationKeys.get(0));
     }
 
     public int saveUser(Utilisateur u) throws Exception {
@@ -142,6 +152,12 @@ public class UserService extends Service {
         return u;
     }
 
+    public Utilisateur getUser(int id) throws Exception {
+        Utilisateur u = findUtilisateur(id);
+        return u;
+    }
+
+
     public Portefeuille getUserWallet(int idUser , int idCrypto) throws Exception {
         Crypto crypto = null;
         try {
@@ -189,7 +205,7 @@ public class UserService extends Service {
         getNgContext().save(vKey);
     }
 
-    public static String generateHash() throws Exception {
+    private static String generateHash() throws Exception {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         Random random = new Random();
         StringBuilder input = new StringBuilder();
@@ -204,5 +220,93 @@ public class UserService extends Service {
         }
 
         return hash.toString().replaceAll("[^a-zA-Z0-9]", "").substring(0, 30);         
+    }
+
+    public void buyCrypto(TransactionCryptoDTO data, int idUser) throws Exception {
+        Utilisateur u = findUtilisateur(idUser);
+        verifiateKey(data.getKey(), u.getEmail());
+        
+        if (u.getId_utilisateur() != idUser) {
+            throw new Exception("Unauthorized transaction");
+        }
+
+        TransactionCrypto trans = new TransactionCrypto();
+        List<Cour> cs = getNgContext().executeToList(Cour.class, "select * from vue_dernier_cours where id_crypto = ?", data.getIdCrypto());
+
+        if (cs.isEmpty()) {
+            throw new Exception("data invalid");
+        }
+
+        Cour c = cs.get(0);
+        Crypto crypto = c.getCrypto();
+        Type up = getNgContext().findById(1, Type.class);
+        
+        double amountToPay = c.getValeur() * data.getQuantity();
+        if (u.getMonnaie() < amountToPay) {
+            throw new Exception("No enough money");
+        }
+
+        trans.setCour(c.getValeur());
+        trans.setCrypto(crypto);
+        trans.setIdUtilisateur(idUser);
+        trans.setDate_action(new Timestamp(System.currentTimeMillis()));
+        trans.setQtty(data.getQuantity());
+        trans.setType(up);
+        
+        getNgContext().save(trans);
+
+        u.setMonnaie(u.getMonnaie() - amountToPay);
+        getNgContext().update(u);
+    }
+
+    public void sellCrypto(TransactionCryptoDTO data, int idUser) throws Exception {
+        Utilisateur u = findUtilisateur(idUser);
+        verifiateKey(data.getKey(), u.getEmail());
+        
+        if (u.getId_utilisateur() != idUser) {
+            throw new Exception("Unauthorized transaction");
+        }
+
+        TransactionCrypto trans = new TransactionCrypto();
+        List<Cour> cs = getNgContext().executeToList(Cour.class, "select * from vue_dernier_cours where id_crypto = ?", data.getIdCrypto());
+
+        if (cs.isEmpty()) {
+            throw new Exception("data invalid");
+        }
+
+        Cour c = cs.get(0);
+        Crypto crypto = c.getCrypto();
+        Type down = getNgContext().findById(2, Type.class);
+        
+        double amountToEarn = c.getValeur() * data.getQuantity();
+
+        Portefeuille p = getUserWallet(u.getId_utilisateur(), crypto.getId_crypto());
+        if (p.getQuantite() < data.getQuantity()) {
+            throw new Exception("No enough Crypto coin");
+        }
+
+        trans.setCour(c.getValeur());
+        trans.setCrypto(crypto);
+        trans.setIdUtilisateur(idUser);
+        trans.setDate_action(new Timestamp(System.currentTimeMillis()));
+        trans.setQtty(data.getQuantity());
+        trans.setType(down);
+        
+        getNgContext().save(trans);
+
+        u.setMonnaie(u.getMonnaie() + amountToEarn);
+        getNgContext().update(u);
+    }
+
+    public void feedback(FeedbackDTO feed, int idUser) throws Exception {
+        Utilisateur u = findUtilisateur(idUser);
+
+        Feedback feedback = new Feedback();
+        feedback.setContent(feed.getContent());
+        feedback.setSubject(feed.getSubject());
+        feedback.setId_sender(u.getId_utilisateur());
+        getNgContext().save(feedback);
+
+        MailService.sendEmail(feedback, u);
     }
 }

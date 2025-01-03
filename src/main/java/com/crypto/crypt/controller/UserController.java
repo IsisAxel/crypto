@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.crypto.crypt.conf.JwtUtil;
 import com.crypto.crypt.model.Utilisateur;
+import com.crypto.crypt.model.dto.FeedbackDTO;
+import com.crypto.crypt.model.dto.TransactionCryptoDTO;
 import com.crypto.crypt.model.dto.TransactionFondDTO;
 import com.crypto.crypt.model.tiers.Portefeuille;
 import com.crypto.crypt.service.UserService;
@@ -41,6 +43,21 @@ public class UserController {
         }
     }
 
+    @TokenRequired
+    @GetMapping("/sm")
+     public ResponseEntity<ApiResponse> getUser(@RequestHeader("Authorization") String authorizationHeader) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+
+            Utilisateur u = uService.getUser(id);
+            ApiResponse response = new ApiResponse(true, u, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
 
     @TokenRequired
     @GetMapping("/vdrequest")
@@ -60,9 +77,89 @@ public class UserController {
 
     @TokenRequired
     @PostMapping("/{type}")
-    public ResponseEntity<ApiResponse> transactionFond(@PathVariable String type, @RequestBody TransactionFondDTO data) {
+    public ResponseEntity<ApiResponse> transactionFond(@RequestHeader("Authorization") String authorizationHeader, @PathVariable String type, @RequestBody TransactionFondDTO data) {
         try (UserService uService = new UserService()) {
-            uService.transaction(type, data);
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+            
+            uService.transaction(id, type, data);
+            ApiResponse response = new ApiResponse(true, "reussi", null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @PostMapping("/depot")
+    public ResponseEntity<ApiResponse> depot(@RequestHeader("Authorization") String authorizationHeader, @RequestBody TransactionFondDTO data) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+            
+            uService.transaction(id, "depot", data);
+            ApiResponse response = new ApiResponse(true, "reussi", null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @PostMapping("/retrait")
+    public ResponseEntity<ApiResponse> retrait(@RequestHeader("Authorization") String authorizationHeader, @RequestBody TransactionFondDTO data) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+            
+            uService.transaction(id, "retrait", data);
+            ApiResponse response = new ApiResponse(true, "reussi", null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @PostMapping("/buy")
+    public ResponseEntity<ApiResponse> buyCrypto(@RequestHeader("Authorization") String authorizationHeader, @RequestBody TransactionCryptoDTO data) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+            uService.buyCrypto(data, id);
+            ApiResponse response = new ApiResponse(true, "reussi", null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @PostMapping("/sell")
+    public ResponseEntity<ApiResponse> sellCrypto(@RequestHeader("Authorization") String authorizationHeader, @RequestBody TransactionCryptoDTO data) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+            uService.sellCrypto(data, id);
+            ApiResponse response = new ApiResponse(true, "reussi", null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @PostMapping("/feedback")
+    public ResponseEntity<ApiResponse> feedback(@RequestHeader("Authorization") String authorizationHeader, @RequestBody FeedbackDTO data) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+            uService.feedback(data, id);
             ApiResponse response = new ApiResponse(true, "reussi", null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {

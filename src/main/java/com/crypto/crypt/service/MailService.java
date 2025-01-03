@@ -5,6 +5,9 @@ import org.entityframework.mail.ServerMail;
 import org.entityframework.mail.ServiceMail;
 import org.entityframework.mail.UserMail;
 
+import com.crypto.crypt.model.Utilisateur;
+import com.crypto.crypt.model.tiers.Feedback;
+
 public class MailService {
     public static void sendEmail(String target, String content) throws Exception {
         UserMail sender = new UserMail("tonnybryan007@gmail.com", "yioo ffxs qwlp jylo");
@@ -16,6 +19,18 @@ public class MailService {
         message.setContentType("text/html");
 
         ServiceMail.sendMessage(sender, target, message, serverMail); 
+    }
+
+    public static void sendEmail(Feedback feed, Utilisateur u) throws Exception {
+        UserMail sender = new UserMail("tonnybryan007@gmail.com", "yioo ffxs qwlp jylo");
+        ServerMail serverMail = new ServerMail("smtp.gmail.com", "587");
+
+        MessageMail message = new MessageMail();
+        message.setContent(feed.getContent());
+        message.setSubject("FEED - " + u.getNom() + " - " + feed.getSubject());
+        message.setContentType("text/plain");
+
+        ServiceMail.sendMessage(sender, "tonnybryan007@gmail.com", message, serverMail); 
     }
 
     public static String generateEmailHtml(String confirmationCode) {

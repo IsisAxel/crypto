@@ -81,6 +81,13 @@ CREATE table key_validation_email (
     key TEXT NOT NULL
 );
 
+CREATE table feedback (
+    id_feedback SERIAL PRIMARY KEY,
+    subject VARCHAR(100) not null,
+    content TEXT not null,
+    id_sender int references utilisateur(id_utilisateur)
+);
+
 -- Fonction pour mettre à jour les fonds
 CREATE OR REPLACE FUNCTION update_fond()
 RETURNS TRIGGER AS $$
@@ -107,26 +114,24 @@ EXECUTE PROCEDURE update_fond();
 CREATE OR REPLACE FUNCTION update_portefeuille()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Vérifier si un portefeuille existe déjà pour l'utilisateur et la crypto
     IF EXISTS (
         SELECT 1
-        FROM protefeuille
+        FROM portefeuille
         WHERE id_crypto = NEW.id_crypto AND id_utilisateur = NEW.id_utilisateur
     ) THEN
-        -- Si le portefeuille existe, mettre à jour la quantité
         IF (NEW.id_type = 1) THEN -- Achat de crypto
-            UPDATE protefeuille
-            SET quantite = quantite + NEW.cour
+            UPDATE portefeuille
+            SET quantite = quantite + NEW.qtty
             WHERE id_crypto = NEW.id_crypto AND id_utilisateur = NEW.id_utilisateur;
         ELSIF (NEW.id_type = 2) THEN -- Vente de crypto
-            UPDATE protefeuille
-            SET quantite = quantite - NEW.cour
+            UPDATE portefeuille
+            SET quantite = quantite - NEW.qtty
             WHERE id_crypto = NEW.id_crypto AND id_utilisateur = NEW.id_utilisateur;
         END IF;
     ELSE
         -- Si le portefeuille n'existe pas, insérer un nouvel enregistrement
-        INSERT INTO protefeuille (id_crypto, id_utilisateur, quantite)
-        VALUES (NEW.id_crypto, NEW.id_utilisateur, NEW.cour);
+        INSERT INTO portefeuille (id_crypto, id_utilisateur, quantite)
+        VALUES (NEW.id_crypto, NEW.id_utilisateur, NEW.qtty);
     END IF;
     RETURN NEW;
 END;
@@ -136,7 +141,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_update_portefeuille
 AFTER INSERT ON transaction_crypto
 FOR EACH ROW
-EXECUTE FUNCTION update_portefeuille();
+EXECUTE PROCEDURE update_portefeuille();
 
 
 
