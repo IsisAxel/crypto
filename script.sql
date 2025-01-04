@@ -1,3 +1,7 @@
+CREATE DATABASE crypto_data;
+
+\connect crypto_data
+
 CREATE TABLE utilisateur(
     id_utilisateur SERIAL PRIMARY KEY,
     f_id INT, 
@@ -77,7 +81,7 @@ CREATE TABlE transaction_fond(
 
 CREATE table key_validation_email (
     id_validation SERIAL PRIMARY KEY,
-    email VARCHAR(100) REFERENCES utilisateur(email), 
+    email VARCHAR(100), 
     key TEXT NOT NULL
 );
 
@@ -88,15 +92,14 @@ CREATE table feedback (
     id_sender int references utilisateur(id_utilisateur)
 );
 
--- Fonction pour mettre à jour les fonds
 CREATE OR REPLACE FUNCTION update_fond()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF (NEW.id_type = 1) THEN -- Supposons que id_type = 1 correspond à un ajout de fonds
+    IF (NEW.id_type = 1) THEN 
         UPDATE utilisateur
         SET monnaie = monnaie + NEW.valeur
         WHERE id_utilisateur = NEW.id_utilisateur;
-    ELSIF (NEW.id_type = 2) THEN -- Supposons que id_type = 2 correspond à un retrait de fonds
+    ELSIF (NEW.id_type = 2) THEN 
         UPDATE utilisateur
         SET monnaie = monnaie - NEW.valeur
         WHERE id_utilisateur = NEW.id_utilisateur;
@@ -105,7 +108,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger pour transaction_fond
 CREATE TRIGGER trigger_update_fond
 AFTER INSERT ON transaction_fond
 FOR EACH ROW
@@ -137,13 +139,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger pour transaction_crypto
 CREATE TRIGGER trigger_update_portefeuille
 AFTER INSERT ON transaction_crypto
 FOR EACH ROW
 EXECUTE PROCEDURE update_portefeuille();
-
-
 
 CREATE OR REPLACE FUNCTION generer_cours_crypto()
 RETURNS VOID AS $$
@@ -172,8 +171,6 @@ BEGIN
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
-
-
 
 CREATE OR REPLACE VIEW vue_dernier_cours AS
 SELECT

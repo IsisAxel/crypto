@@ -14,6 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/crypto/auth")
 public class AuthentificationController {
+    private static final String AUTH_URL = "http://fast_auth:5000";
 
     @Autowired
     private IdentityProviderService identityProviderService;
@@ -27,13 +28,13 @@ public class AuthentificationController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, Object> requestBody) {
-        String identityProviderUrl = "http://localhost/api/User/register"; 
+        String identityProviderUrl = AUTH_URL + "/api/User/register"; 
         return identityProviderService.directCall(identityProviderUrl, HttpMethod.POST, requestBody);
     }
 
     @PostMapping("/validate")
     public ResponseEntity<?> validateEmail(@RequestParam String key) {
-        String identityProviderUrl = "http://localhost/api/User/confirm?key=" + key; 
+        String identityProviderUrl = AUTH_URL + "/api/User/confirm?key=" + key; 
         
         try {
             ResponseEntity<?> rp = identityProviderService.directCall(identityProviderUrl, HttpMethod.POST);
@@ -54,13 +55,13 @@ public class AuthentificationController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, Object> requestBody) {
-        String identityProviderUrl = "http://localhost/api/User/login"; 
+        String identityProviderUrl = AUTH_URL + "/api/User/login"; 
         return identityProviderService.directCall(identityProviderUrl, HttpMethod.POST, requestBody);
     }
 
     @PostMapping("/confirmPin")
     public ResponseEntity<?> confirmPin(@RequestBody Map<String, Object> requestBody) {
-        String identityProviderUrl = "http://localhost/api/User/auth"; 
+        String identityProviderUrl = AUTH_URL + "/api/User/auth"; 
         try {
             ResponseEntity<?> rp = identityProviderService.directCall(identityProviderUrl, HttpMethod.POST, requestBody);
             ResponseEntity<?> result = identityProviderService.extractUser(rp);
@@ -80,13 +81,13 @@ public class AuthentificationController {
 
     @PostMapping("/reset/request")
     public ResponseEntity<?> requestReset(@RequestBody Map<String, Object> requestBody) {
-        String identityProviderUrl = "http://localhost/api/User/sendReset"; 
+        String identityProviderUrl = AUTH_URL + "/api/User/sendReset"; 
         return identityProviderService.directCall(identityProviderUrl, HttpMethod.POST, requestBody);
     }
 
     @PostMapping("/reset")
     public ResponseEntity<?> reset(@RequestParam String key) {
-        String identityProviderUrl = "http://localhost/api/User/reset?key=" + key; 
+        String identityProviderUrl = AUTH_URL + "/api/User/reset?key=" + key; 
         return identityProviderService.directCall(identityProviderUrl, HttpMethod.POST);
     }
 }

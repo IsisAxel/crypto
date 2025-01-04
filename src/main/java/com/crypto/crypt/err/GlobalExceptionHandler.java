@@ -16,7 +16,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleGenericException(Exception ex) {
+        ex.printStackTrace();
         return ResponseEntity.internalServerError().body(ApiResponse.Of(ex));
-
     }
 }
