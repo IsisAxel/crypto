@@ -14,7 +14,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/crypto/auth")
 public class AuthentificationController {
-    private static final String AUTH_URL = "http://fast_auth:5000";
+    // private static final String AUTH_URL = "http://fast_auth:5000";
+    private static final String AUTH_URL = "http://localhost:5000";
 
     @Autowired
     private IdentityProviderService identityProviderService;

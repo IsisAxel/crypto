@@ -28,7 +28,7 @@ CREATE TABLE crypto(
 INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Bitcoin', 'BTC', 'BTC.png');
 INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Wrapped Bitcoin', 'WBTC', 'WBTC.png');
 INSERT INTO crypto (nom, unit_nom, logo) VALUES ('yearn.finance', 'YFI', 'YFI.png');
-INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Wrapped Beacon ETH (WBETH)', 'WBETH', 'WBETH.png');
+INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Solana', 'SOL', 'SOL.png');
 INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Ethereum', 'ETH', 'ETH.png');
 INSERT INTO crypto (nom, unit_nom, logo) VALUES ('PAX Gold', 'PAXG', 'PAXG.png');
 INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Litecoin', 'LTC', 'LTC.png');
