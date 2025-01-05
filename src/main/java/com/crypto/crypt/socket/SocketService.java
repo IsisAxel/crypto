@@ -17,14 +17,13 @@ public class SocketService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Scheduled(fixedRate = 20000)
+    @Scheduled(fixedRate = 10000)
     public void generateAndBroadcastCours() {
         try {
             repository.generateCours(30000, 60000); 
             List<Cour> derniersCours = repository.dernierCours();
-
             String message = objectMapper.writeValueAsString(derniersCours);
-
+            System.out.println("Generating Cour ...");
             webSocketHandler.sendMessage(message);
         } catch (Exception e) {
             e.printStackTrace();
