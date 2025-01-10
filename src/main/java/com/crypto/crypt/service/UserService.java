@@ -20,6 +20,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Random;
 
+import org.entityframework.client.GenericEntity;
 import org.entityframework.error.EntityNotFoundException;
 
 public class UserService extends Service {
@@ -50,7 +51,7 @@ public class UserService extends Service {
         Type down = getNgContext().findById(2, Type.class);
 
         if (u.getMonnaie() < valeur) {
-            throw new Exception("Solde Insuffisant");
+            throw new Exception("Not enough money");
         }
 
         TransactionFond transactionFond = new TransactionFond();
@@ -66,13 +67,13 @@ public class UserService extends Service {
         List<ValidationKey> validationKeys = getNgContext().findWhereArgs(ValidationKey.class, "key = ?", key);
 
         if (validationKeys.isEmpty()) {
-            throw new Exception("Clé Invalide");
+            throw new Exception("Invalid key");
         }
         
         ValidationKey vKey = validationKeys.get(0);
 
         if (!vKey.getEmail().equals(email)) {
-            throw new Exception("Clé Invalide");
+            throw new Exception("Invalid key");
         }
     }
 
@@ -153,8 +154,7 @@ public class UserService extends Service {
     }
 
     public Utilisateur getUser(int id) throws Exception {
-        Utilisateur u = findUtilisateur(id);
-        return u;
+        return findUtilisateur(id);
     }
 
 
@@ -198,7 +198,7 @@ public class UserService extends Service {
             MailService.sendEmail(u.getEmail(), validationHtml);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new Exception("Erreur d'envoi de l'email");
+            throw new Exception("Email not sent");
         }
         
         getNgContext().executeUpdate("delete from key_validation_email where email = ?", u.getEmail());
@@ -231,19 +231,18 @@ public class UserService extends Service {
         }
 
         TransactionCrypto trans = new TransactionCrypto();
-        List<Cour> cs = getNgContext().executeToList(Cour.class, "select * from vue_dernier_cours where id_crypto = ?", data.getIdCrypto());
+        Cour c = GenericEntity.first(getNgContext().executeToList(Cour.class, "select * from vue_dernier_cours where id_crypto = ?", data.getIdCrypto()));
 
-        if (cs.isEmpty()) {
+        if (c == null) {
             throw new Exception("data invalid");
         }
 
-        Cour c = cs.get(0);
         Crypto crypto = c.getCrypto();
         Type up = getNgContext().findById(1, Type.class);
         
         double amountToPay = c.getValeur() * data.getQuantity();
         if (u.getMonnaie() < amountToPay) {
-            throw new Exception("No enough money");
+            throw new Exception("Not enough money");
         }
 
         trans.setCour(c.getValeur());
@@ -268,13 +267,12 @@ public class UserService extends Service {
         }
 
         TransactionCrypto trans = new TransactionCrypto();
-        List<Cour> cs = getNgContext().executeToList(Cour.class, "select * from vue_dernier_cours where id_crypto = ?", data.getIdCrypto());
+        Cour c = GenericEntity.first(getNgContext().executeToList(Cour.class, "select * from vue_dernier_cours where id_crypto = ?", data.getIdCrypto()));
 
-        if (cs.isEmpty()) {
+        if (c == null) {
             throw new Exception("data invalid");
         }
 
-        Cour c = cs.get(0);
         Crypto crypto = c.getCrypto();
         Type down = getNgContext().findById(2, Type.class);
         
@@ -282,7 +280,7 @@ public class UserService extends Service {
 
         Portefeuille p = getUserWallet(u.getId_utilisateur(), crypto.getId_crypto());
         if (p.getQuantite() < data.getQuantity()) {
-            throw new Exception("No enough Crypto coin");
+            throw new Exception("Not enough Crypto coin");
         }
 
         trans.setCour(c.getValeur());

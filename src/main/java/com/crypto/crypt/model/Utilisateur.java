@@ -48,7 +48,7 @@ public class Utilisateur {
 
     public Utilisateur() {}
 
-    public Utilisateur(int f_id, String nom, String email) {
+    public Utilisateur(int f_id, String nom, String email) throws Exception {
         setF_id(f_id);
         setNom(nom);
         setMonnaie(0);
@@ -75,7 +75,10 @@ public class Utilisateur {
         return monnaie;
     }
 
-    public void setMonnaie(double monnaie) {
+    public void setMonnaie(double monnaie) throws Exception {
+        if (monnaie < 0) {
+            throw new Exception("System error, please send feedback");
+        }
         this.monnaie = monnaie;
     }
 

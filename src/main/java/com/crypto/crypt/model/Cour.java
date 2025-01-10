@@ -10,7 +10,6 @@ public class Cour {
     @Col(name = "id_crypto", reference = "active")
     private Crypto crypto;
     private double valeur;
-    //@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssXXX", timezone = "Indian/Antananarivo")
     private Timestamp date_changement;
 
     public Crypto getCrypto() {

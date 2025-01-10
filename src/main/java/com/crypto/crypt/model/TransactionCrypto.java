@@ -73,7 +73,10 @@ public class TransactionCrypto {
         return qtty;
     }
 
-    public void setQtty(double qtty) {
+    public void setQtty(double qtty) throws Exception {
+        if (qtty <= 0) {
+            throw new Exception("Invalid quantity");
+        }
         this.qtty = qtty;
     }
 }

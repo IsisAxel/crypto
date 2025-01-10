@@ -57,7 +57,7 @@ public class CryptoService extends Service{
         return getNgContext().executeToList(Cour.class, "select * from vue_dernier_cours");
     }
 
-    public void generateCours(double min, double max) throws Exception {
+    public void generateCours() throws Exception {
         getNgContext().execute("SELECT generer_cours_crypto()");
     }
 

@@ -46,7 +46,11 @@ public class TransactionFond {
         return valeur;
     }
 
-    public void setValeur(double valeur) {
+
+    public void setValeur(double valeur) throws Exception {
+        if (valeur <= 0) {
+            throw new Exception("Invalid value");
+        }
         this.valeur = valeur;
     }
 
