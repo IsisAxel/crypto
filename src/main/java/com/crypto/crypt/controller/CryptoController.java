@@ -2,12 +2,15 @@ package com.crypto.crypt.controller;
 
 import com.crypto.crypt.model.Cour;
 import com.crypto.crypt.model.Crypto;
+import com.crypto.crypt.model.tiers.Commission;
 import com.crypto.crypt.service.CryptoService;
 import org.entityframework.dev.ApiResponse;
 import org.entityframework.http.TokenRequired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,6 +53,32 @@ public class CryptoController {
         try (CryptoService cryptoService = new CryptoService()) {
             Object files = cryptoService.getCryptoData(idCrypto, limit);
             ApiResponse response = new ApiResponse(true, files, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @GetMapping("/commission")
+    public ResponseEntity<ApiResponse> comm() {
+        try (CryptoService cryptoService = new CryptoService()) {
+            Object data = cryptoService.getCommission();
+            ApiResponse response = new ApiResponse(true, data, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @PutMapping("/commission")
+    public ResponseEntity<ApiResponse> modifCommission(@RequestBody Commission comm) {
+        try (CryptoService cryptoService = new CryptoService()) {
+            cryptoService.modifCommission(comm);
+            ApiResponse response = new ApiResponse(true, "", null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,6 +1,7 @@
 package com.crypto.crypt.service;
 
 import com.crypto.crypt.model.*;
+import com.crypto.crypt.model.tiers.Commission;
 import com.crypto.crypt.model.tiers.CryptoValeur;
 import com.crypto.crypt.model.tiers.DataChart;
 import com.crypto.crypt.model.tiers.Portefeuille;
@@ -27,6 +28,22 @@ public class CryptoService extends Service{
         return getAll(TransactionCrypto.class);
     }
 
+    public Commission getCommission() throws Exception {
+        List<Commission> coms = getNgContext().findWhen(Commission.class, " order by id_commission desc");
+
+        if (coms.isEmpty()) {
+            Commission c = new Commission();
+            c.setCommission_achat(0.0);
+            c.setCommission_vente(0.0);
+            return c;
+        }
+
+        return coms.get(0);
+    }
+
+    public void modifCommission(Commission c) throws Exception {
+        getNgContext().save(c);
+    }
     public PortefeuilleUser getPortefeuilleUser(int idUser) throws Exception {
         List<Portefeuille> portefeuilles = getNgContext().findWhereArgs(Portefeuille.class, "id_utilisateur = ?", idUser);
         PortefeuilleUser portefeuilleUser = new PortefeuilleUser();

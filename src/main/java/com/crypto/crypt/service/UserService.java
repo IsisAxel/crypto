@@ -10,6 +10,7 @@ import com.crypto.crypt.model.Utilisateur;
 import com.crypto.crypt.model.dto.FeedbackDTO;
 import com.crypto.crypt.model.dto.TransactionCryptoDTO;
 import com.crypto.crypt.model.dto.TransactionFondDTO;
+import com.crypto.crypt.model.tiers.Commission;
 import com.crypto.crypt.model.tiers.Feedback;
 import com.crypto.crypt.model.tiers.Portefeuille;
 import com.crypto.crypt.model.tiers.SessionUser;
@@ -64,17 +65,17 @@ public class UserService extends Service {
     }
 
     private void verifiateKey(String key, String email) throws Exception {
-        List<ValidationKey> validationKeys = getNgContext().findWhereArgs(ValidationKey.class, "key = ?", key);
+        // List<ValidationKey> validationKeys = getNgContext().findWhereArgs(ValidationKey.class, "key = ?", key);
 
-        if (validationKeys.isEmpty()) {
-            throw new Exception("Invalid key");
-        }
+        // if (validationKeys.isEmpty()) {
+        //     throw new Exception("Invalid key");
+        // }
         
-        ValidationKey vKey = validationKeys.get(0);
+        // ValidationKey vKey = validationKeys.get(0);
 
-        if (!vKey.getEmail().equals(email)) {
-            throw new Exception("Invalid key");
-        }
+        // if (!vKey.getEmail().equals(email)) {
+        //     throw new Exception("Invalid key");
+        // }
     }
 
     public void transaction(int idUser, String type, TransactionFondDTO data) throws Exception {
@@ -195,7 +196,7 @@ public class UserService extends Service {
 
         String validationHtml = MailService.generateEmailHtml(vKey.getKey());
         try {
-            MailService.sendEmail(u.getEmail(), validationHtml);
+            //MailService.sendEmail(u.getEmail(), validationHtml);
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception("Email not sent");
@@ -241,6 +242,9 @@ public class UserService extends Service {
         Type up = getNgContext().findById(1, Type.class);
         
         double amountToPay = c.getValeur() * data.getQuantity();
+        // Commission commission = new CryptoService(getNgContext()).getCommission();
+        // amountToPay += (commission.getCommission_achat() * amountToPay) / 100;
+
         if (u.getMonnaie() < amountToPay) {
             throw new Exception("Not enough money");
         }
@@ -277,6 +281,8 @@ public class UserService extends Service {
         Type down = getNgContext().findById(2, Type.class);
         
         double amountToEarn = c.getValeur() * data.getQuantity();
+        // Commission commission = new CryptoService(getNgContext()).getCommission();
+        // amountToEarn -= (commission.getCommission_vente() * amountToEarn) / 100;
 
         Portefeuille p = getUserWallet(u.getId_utilisateur(), crypto.getId_crypto());
         if (p.getQuantite() < data.getQuantity()) {
@@ -306,5 +312,18 @@ public class UserService extends Service {
         getNgContext().save(feedback);
 
         MailService.sendEmail(feedback, u);
+    }
+
+    public Commission getCommission() throws Exception {
+        List<Commission> coms = getNgContext().findWhen(Commission.class, " order by id_commission desc");
+
+        if (coms.isEmpty()) {
+            Commission c = new Commission();
+            c.setCommission_achat(0.0);
+            c.setCommission_vente(0.0);
+            return c;
+        }
+
+        return coms.get(0);
     }
 }

@@ -12,7 +12,7 @@ public abstract class DataSource {
     }
 
     // public static Connection getConnection() throws SQLException {
-    //     String url = "jdbc:postgresql://postgres:5432/crypto_data"; // Nom du service Docker comme hôte
+    //     String url = "jdbc:postgresql://postgres:5432/crypto_data"; 
     //     String username = "postgres";
     //     String password = "postgres";
 

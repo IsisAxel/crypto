@@ -92,6 +92,15 @@ CREATE table feedback (
     id_sender int references utilisateur(id_utilisateur)
 );
 
+CREATE TABLE commission(
+    id_commission SERIAL PRIMARY KEY,
+    commission_achat NUMERIC,
+    commission_vente NUMERIC
+);
+
+INSERT INTO commission (commission_achat, commission_vente) VALUES (2 , 2);
+
+
 CREATE OR REPLACE FUNCTION update_fond()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -163,7 +172,7 @@ BEGIN
             dernier_cours.valeur := 10000;
         END IF;
 
-        variation := (random() * 0.02) - 0.01; 
+        variation := (random() * 2) - 1; 
         dernier_cours.valeur := dernier_cours.valeur * (1 + variation);
 
         INSERT INTO cour (id_crypto, valeur, date_changement)
