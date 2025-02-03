@@ -49,7 +49,7 @@ public class TokenRequiredAspect {
                 throw new TokenValidationException("Token expiré");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return false;
         }
 

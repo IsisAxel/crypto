@@ -1,13 +1,15 @@
 package com.crypto.crypt.model;
 
 import org.entityframework.tools.Col;
+import org.entityframework.tools.FK;
 
 //import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.sql.Timestamp;
 
 public class Cour {
-    @Col(name = "id_crypto", reference = "active")
+    @Col("id_crypto")
+    @FK(Crypto.class)
     private Crypto crypto;
     private double valeur;
     private Timestamp date_changement;

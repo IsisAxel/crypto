@@ -43,7 +43,7 @@ public class AuthentificationController {
 
             return result;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             ResponseApi response = new ResponseApi();
             response.setSuccess(false);
             response.setMessage(e.getMessage());
@@ -69,7 +69,7 @@ public class AuthentificationController {
 
             return result;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             ResponseApi response = new ResponseApi();
             response.setSuccess(false);
             response.setMessage(e.getMessage());

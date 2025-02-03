@@ -1,16 +1,11 @@
 package com.crypto.crypt.controller;
 
+import com.crypto.crypt.model.Operation;
 import org.entityframework.dev.ApiResponse;
 import org.entityframework.http.TokenRequired;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.crypto.crypt.conf.JwtUtil;
 import com.crypto.crypt.model.Utilisateur;
@@ -38,7 +33,20 @@ public class UserController {
             ApiResponse response = new ApiResponse(true, u, null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    //@TokenRequired
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse> getUsers() {
+        try (UserService uService = new UserService()) {
+            Object data = uService.getUtilisateurs();
+            ApiResponse response = new ApiResponse(true, data, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
@@ -54,7 +62,7 @@ public class UserController {
             ApiResponse response = new ApiResponse(true, u, null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
@@ -70,23 +78,7 @@ public class UserController {
             ApiResponse response = new ApiResponse(true, "", null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
-        }
-    }
-
-    @TokenRequired
-    @PostMapping("/{type}")
-    public ResponseEntity<ApiResponse> transactionFond(@RequestHeader("Authorization") String authorizationHeader, @PathVariable String type, @RequestBody TransactionFondDTO data) {
-        try (UserService uService = new UserService()) {
-            String token = authorizationHeader.replace("Bearer ", "");
-            int id = Integer.parseInt(jwtUtil.extractSubject(token));
-            
-            uService.transaction(id, type, data);
-            ApiResponse response = new ApiResponse(true, "reussi", null);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
@@ -97,12 +89,16 @@ public class UserController {
         try (UserService uService = new UserService()) {
             String token = authorizationHeader.replace("Bearer ", "");
             int id = Integer.parseInt(jwtUtil.extractSubject(token));
-            
-            uService.transaction(id, "depot", data);
+
+            uService.beginTransaction();
+            uService.demandeTransaction(id, "depot", data);
+
+            uService.endTransaction();
+            uService.commit();
             ApiResponse response = new ApiResponse(true, "reussi", null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
@@ -113,12 +109,17 @@ public class UserController {
         try (UserService uService = new UserService()) {
             String token = authorizationHeader.replace("Bearer ", "");
             int id = Integer.parseInt(jwtUtil.extractSubject(token));
-            
-            uService.transaction(id, "retrait", data);
+            uService.beginTransaction();
+
+            uService.demandeTransaction(id, "retrait", data);
+
+            uService.endTransaction();
+            uService.commit();
+
             ApiResponse response = new ApiResponse(true, "reussi", null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
@@ -127,13 +128,18 @@ public class UserController {
     @PostMapping("/buy")
     public ResponseEntity<ApiResponse> buyCrypto(@RequestHeader("Authorization") String authorizationHeader, @RequestBody TransactionCryptoDTO data) {
         try (UserService uService = new UserService()) {
+            uService.beginTransaction();
             String token = authorizationHeader.replace("Bearer ", "");
             int id = Integer.parseInt(jwtUtil.extractSubject(token));
             uService.buyCrypto(data, id);
+
+
+            uService.endTransaction();
+            uService.commit();
             ApiResponse response = new ApiResponse(true, "reussi", null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
@@ -142,13 +148,17 @@ public class UserController {
     @PostMapping("/sell")
     public ResponseEntity<ApiResponse> sellCrypto(@RequestHeader("Authorization") String authorizationHeader, @RequestBody TransactionCryptoDTO data) {
         try (UserService uService = new UserService()) {
+            uService.beginTransaction();
             String token = authorizationHeader.replace("Bearer ", "");
             int id = Integer.parseInt(jwtUtil.extractSubject(token));
             uService.sellCrypto(data, id);
+
+            uService.endTransaction();
+            uService.commit();
             ApiResponse response = new ApiResponse(true, "reussi", null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
@@ -163,7 +173,7 @@ public class UserController {
             ApiResponse response = new ApiResponse(true, "reussi", null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
@@ -179,7 +189,7 @@ public class UserController {
             ApiResponse response = new ApiResponse(true, "", null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
@@ -195,7 +205,33 @@ public class UserController {
             ApiResponse response = new ApiResponse(true, p, null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    //@TokenRequired
+    @GetMapping("/operations")
+    public ResponseEntity<ApiResponse> getOperations(@RequestParam(value = "idu", required = false, defaultValue = "0") int idu, @RequestParam(value = "idc", required = false, defaultValue = "0") int idc) {
+        try (UserService uService = new UserService()) {
+            Object data = uService.getAllOperations(idu, idc);
+            ApiResponse response = new ApiResponse(true, data, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    //@TokenRequired
+    @GetMapping("/transactions")
+    public ResponseEntity<ApiResponse> getTransactions(@RequestParam(value = "idu", required = false, defaultValue = "0") int idu, @RequestParam(value = "idc", required = false, defaultValue = "0") int idc) {
+        try (UserService uService = new UserService()) {
+            Object data = uService.getTransactions(idu, idc);
+            ApiResponse response = new ApiResponse(true, data, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }

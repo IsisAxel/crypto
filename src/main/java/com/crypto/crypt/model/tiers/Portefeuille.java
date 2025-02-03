@@ -1,6 +1,7 @@
 package com.crypto.crypt.model.tiers;
 
 import org.entityframework.tools.Col;
+import org.entityframework.tools.FK;
 import org.entityframework.tools.Primary;
 
 import com.crypto.crypt.model.Crypto;
@@ -8,7 +9,8 @@ import com.crypto.crypt.model.Crypto;
 public class Portefeuille {
     @Primary(auto = true)
     private int id_portefeuille;
-    @Col(name = "id_crypto", reference = "id_crypto")
+    @Col("id_crypto")
+    @FK(Crypto.class)
     private Crypto crypto;
     private int id_utilisateur;
     private double quantite;

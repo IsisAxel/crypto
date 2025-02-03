@@ -51,7 +51,7 @@
 		<dependency>
 			<groupId>org.entityframework</groupId>
 			<artifactId>fast_api</artifactId>
-			<version>1.5</version>
+			<version>2.1</version>
 		</dependency>
 
 		<dependency>
@@ -91,6 +91,18 @@
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjweaver</artifactId>
 			<version>1.9.22</version> <!-- Vous pouvez utiliser une version plus récente si disponible -->
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.firebase</groupId>
+			<artifactId>firebase-admin</artifactId>
+			<version>9.1.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-firestore</artifactId>
+			<version>3.6.0</version>
 		</dependency>
 	</dependencies>
 

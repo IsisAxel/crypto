@@ -4,52 +4,54 @@ CREATE DATABASE crypto_data;
 
 CREATE TABLE utilisateur(
     id_utilisateur SERIAL PRIMARY KEY,
-    f_id INT, 
-    nom VARCHAR(250),
-    email VARCHAR(100),
-    monnaie NUMERIC DEFAULT 0
+    f_id INT NOT NULL ,
+    nom VARCHAR(250) not null ,
+    email VARCHAR(100) unique not null ,
+    monnaie NUMERIC DEFAULT 0,
+    imageUrl TEXT
 );
 
 CREATE TABLE sessionUser(
     id_session SERIAL PRIMARY KEY,
-    token TEXT,
-    f_token TEXT,
-    expiration TIMESTAMP,
-    id_utilisateur int REFERENCES utilisateur(id_utilisateur)
+    token TEXT not null ,
+    f_token TEXT not null ,
+    expiration TIMESTAMP not null ,
+    id_utilisateur int REFERENCES utilisateur(id_utilisateur) not null
 );
 
 CREATE TABLE crypto(
     id_crypto SERIAL PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     unit_nom VARCHAR(10) NOT NULL,
-    logo VARCHAR(50)
+    url TEXT not null
 );
 
-INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Bitcoin', 'BTC', 'BTC.png');
-INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Wrapped Bitcoin', 'WBTC', 'WBTC.png');
-INSERT INTO crypto (nom, unit_nom, logo) VALUES ('yearn.finance', 'YFI', 'YFI.png');
-INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Solana', 'SOL', 'SOL.png');
-INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Ethereum', 'ETH', 'ETH.png');
-INSERT INTO crypto (nom, unit_nom, logo) VALUES ('PAX Gold', 'PAXG', 'PAXG.png');
-INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Litecoin', 'LTC', 'LTC.png');
-INSERT INTO crypto (nom, unit_nom, logo) VALUES ('BNB', 'BNB', 'BNB.png');
-INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Bittensor', 'TAO', 'TAO.png');
-INSERT INTO crypto (nom, unit_nom, logo) VALUES ('Bitcoin Cash', 'BCH', 'BCH.png');
+INSERT INTO crypto (nom, unit_nom, url) VALUES ('Bitcoin', 'BTC', 'https://bin.bnbstatic.com/static/assets/logos/BTC.png');
+INSERT INTO crypto (nom, unit_nom, url) VALUES ('Polkadot', 'DOT', 'https://bin.bnbstatic.com/image/admin_mgs_image_upload/20230404/8e0060bf-9aed-4003-aba3-3d2367c18215.png');
+INSERT INTO crypto (nom, unit_nom, url) VALUES ('Sui', 'SUI', 'https://bin.bnbstatic.com/static/assets/logos/SUI.png');
+INSERT INTO crypto (nom, unit_nom, url) VALUES ('Raydium', 'RAY', 'https://bin.bnbstatic.com/static/assets/logos/RAY.png');
+INSERT INTO crypto (nom, unit_nom, url) VALUES ('Ethereum', 'ETH', 'https://bin.bnbstatic.com/static/assets/logos/ETH.png');
+INSERT INTO crypto (nom, unit_nom, url) VALUES ('Litecoin', 'LTC', 'https://bin.bnbstatic.com/static/assets/logos/LTC.png');
+INSERT INTO crypto (nom, unit_nom, url) VALUES ('THORChain', 'RUNE', 'https://bin.bnbstatic.com/static/assets/logos/RUNE.png');
+INSERT INTO crypto (nom, unit_nom, url) VALUES ('SuperVerse', 'SUPER', 'https://bin.bnbstatic.com/static/assets/logos/SUPER.png');
+INSERT INTO crypto (nom, unit_nom, url) VALUES ('Synapse', 'SYN', 'https://bin.bnbstatic.com/static/assets/logos/SYN.png');
+INSERT INTO crypto (nom, unit_nom, url) VALUES ('PAX Gold', 'PAXG', 'https://bin.bnbstatic.com/static/assets/logos/PAXG.png');
+INSERT INTO crypto (nom, unit_nom, url) VALUES ('IQ', 'IQ', 'https://bin.bnbstatic.com/static/assets/logos/IQ.png');
 
 
 CREATE TABLE cour(
     id_cour SERIAL PRIMARY KEY,
-    id_crypto INT REFERENCES crypto(id_crypto),
-    valeur NUMERIC ,
+    id_crypto INT REFERENCES crypto(id_crypto) not null ,
+    valeur NUMERIC not null ,
     date_changement TIMESTAMP NOT NULL
 );
 
 
 CREATE TABLE portefeuille(
     id_portefeuille SERIAL PRIMARY KEY,
-    id_crypto INT REFERENCES crypto(id_crypto),
-    id_utilisateur INT REFERENCES utilisateur(id_utilisateur),
-    quantite NUMERIC
+    id_crypto INT REFERENCES crypto(id_crypto) not null ,
+    id_utilisateur INT REFERENCES utilisateur(id_utilisateur) not null ,
+    quantite NUMERIC not null
 );
 
 CREATE TABLE type(
@@ -67,16 +69,38 @@ CREATE TABLE transaction_crypto (
     cour NUMERIC,
     qtty NUMERIC NOT NULL,
     date_action TIMESTAMP NOT NULL,
-    id_type INT REFERENCES type(id_type)
+    id_type INT REFERENCES type(id_type),
+    commission NUMERIC NOT NULL ,
+    total NUMERIC NOT NULL ,
+    total_with_commission NUMERIC NOT NULL
 );
 
+CREATE TABLE etat (
+  id_etat SERIAL PRIMARY KEY ,
+  designation varchar(20) not null
+);
+
+INSERT INTO ETAT (designation) values ('attente');
+INSERT INTO ETAT (designation) values ('valider');
+INSERT INTO ETAT (designation) values ('anuller');
+
+CREATE TABLE demande_transaction_fond (
+      id_demande_transaction_fond SERIAL PRIMARY KEY ,
+      id_utilisateur int references utilisateur(id_utilisateur),
+      valeur NUMERIC not null,
+      id_type INT REFERENCES type(id_type),
+      date_demande TIMESTAMP NOT NULL,
+      date_reponse timestamp,
+      id_etat INT REFERENCES etat(id_etat) not null
+);
 
 CREATE TABlE transaction_fond(
     id_transaction_fond SERIAL PRIMARY KEY,
     id_type INT REFERENCES type(id_type),
     id_utilisateur INT REFERENCES utilisateur(id_utilisateur),
     valeur NUMERIC,
-    date_action TIMESTAMP NOT NULL
+    date_action TIMESTAMP NOT NULL,
+    id_demande INT REFERENCES demande_transaction_fond(id_demande_transaction_fond)
 );
 
 CREATE table key_validation_email (
@@ -198,6 +222,31 @@ WHERE
         FROM cour
         WHERE cour.id_crypto = c.id_crypto
     );
+
+CREATE VIEW operations_utilisateurs AS
+SELECT
+    tc.id_utilisateur,
+    'crypto' AS type_transaction_str,
+    tc.id_type AS id_type_transaction,
+    tc.cour,
+    tc.id_crypto,
+    NULL AS valeur,
+    tc.date_action
+FROM
+    transaction_crypto tc
+UNION ALL
+SELECT
+    tf.id_utilisateur,
+    'fond' AS type_transaction_str,
+    tf.id_type AS id_type_transaction,
+    NULL AS cour,
+    NULL AS id_crypto,
+    tf.valeur,
+    tf.date_action
+FROM
+    transaction_fond tf
+ORDER BY
+    date_action DESC;
 
 
 

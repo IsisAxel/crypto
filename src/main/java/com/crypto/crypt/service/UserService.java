@@ -1,12 +1,6 @@
 package com.crypto.crypt.service;
 
-import com.crypto.crypt.model.Cour;
-import com.crypto.crypt.model.Crypto;
-import com.crypto.crypt.model.PortefeuilleUser;
-import com.crypto.crypt.model.TransactionCrypto;
-import com.crypto.crypt.model.TransactionFond;
-import com.crypto.crypt.model.Type;
-import com.crypto.crypt.model.Utilisateur;
+import com.crypto.crypt.model.*;
 import com.crypto.crypt.model.dto.FeedbackDTO;
 import com.crypto.crypt.model.dto.TransactionCryptoDTO;
 import com.crypto.crypt.model.dto.TransactionFondDTO;
@@ -29,6 +23,14 @@ public class UserService extends Service {
         super();
     }
 
+    public UserService(GenericEntity ng) {
+        super(ng.getConnection());
+    }
+
+    public List<Utilisateur> getUtilisateurs() throws Exception {
+        return getAll(Utilisateur.class);
+    }
+
     public void logout(String token, int id) throws Exception {
         List<SessionUser> s = getNgContext().findWhereArgs(SessionUser.class, "token = ?", token);
         if (!s.isEmpty()) {
@@ -36,7 +38,7 @@ public class UserService extends Service {
         }
     }
 
-    public void depot(Utilisateur u, double valeur) throws Exception {
+    public void depot(Utilisateur u, double valeur, int idDemande) throws Exception {
         Type up = getNgContext().findById(1, Type.class);
 
         TransactionFond transactionFond = new TransactionFond();
@@ -44,11 +46,32 @@ public class UserService extends Service {
         transactionFond.setType(up);
         transactionFond.setValeur(valeur);
         transactionFond.setDate_action(new Timestamp(System.currentTimeMillis()));
+        transactionFond.setId_demande(idDemande);
 
         getNgContext().save(transactionFond);
     }
 
-    public void retrait(Utilisateur u, double valeur) throws Exception {
+    public void demandeDepot(Utilisateur u, double valeur) throws Exception {
+        Type up = getNgContext().findById(1, Type.class);
+        Etat attente = getNgContext().findById(1, Etat.class);
+
+        int countDemande = getNgContext().count(DemandeTransaction.class, "id_utilisateur = ? and id_etat = ?", u.getId_utilisateur(), 1);
+        if (countDemande != 0) {
+            throw new Exception("Veuillez attendre que l'administrateur repond à votre derniere demande");
+        }
+
+        DemandeTransaction dt = new DemandeTransaction();
+        dt.setType(up);
+        dt.setDate_demande(new Timestamp(System.currentTimeMillis()));
+        dt.setValeur(valeur);
+        dt.setUtilisateur(u);
+        dt.setEtat(attente);
+
+        int id = (int) getNgContext().save(dt);
+        dt.setId_demande(id);
+    }
+
+    public void retrait(Utilisateur u, double valeur, int idDemande) throws Exception {
         Type down = getNgContext().findById(2, Type.class);
 
         if (u.getMonnaie() < valeur) {
@@ -60,37 +83,77 @@ public class UserService extends Service {
         transactionFond.setType(down);
         transactionFond.setValeur(valeur);
         transactionFond.setDate_action(new Timestamp(System.currentTimeMillis()));
+        transactionFond.setId_demande(idDemande);
 
         getNgContext().save(transactionFond);
     }
 
-    private void verifiateKey(String key, String email) throws Exception {
-        // List<ValidationKey> validationKeys = getNgContext().findWhereArgs(ValidationKey.class, "key = ?", key);
+    public void demandeRetrait(Utilisateur u, double valeur) throws Exception {
+        Type down = getNgContext().findById(2, Type.class);
 
-        // if (validationKeys.isEmpty()) {
-        //     throw new Exception("Invalid key");
-        // }
-        
-        // ValidationKey vKey = validationKeys.get(0);
+        int countDemande = getNgContext().count(DemandeTransaction.class, "id_utilisateur = ? and id_etat = ?", u.getId_utilisateur(), 1);
+        if (countDemande != 0) {
+            throw new Exception("Veuillez attendre que l'administrateur repond à votre derniere demande");
+        }
 
-        // if (!vKey.getEmail().equals(email)) {
-        //     throw new Exception("Invalid key");
-        // }
+        if (u.getMonnaie() < valeur) {
+            throw new Exception("Not enough money");
+        }
+
+        Etat attente = getNgContext().findById(1, Etat.class);
+
+        DemandeTransaction dt = new DemandeTransaction();
+        dt.setType(down);
+        dt.setDate_demande(new Timestamp(System.currentTimeMillis()));
+        dt.setValeur(valeur);
+        dt.setUtilisateur(u);
+        dt.setEtat(attente);
+
+        getNgContext().save(dt);
     }
 
-    public void transaction(int idUser, String type, TransactionFondDTO data) throws Exception {
-        verifiateKey(data.getKey(), data.getEmail());
+    private void verifiateKey(String key, String email) throws Exception {
+         List<ValidationKey> validationKeys = getNgContext().findWhereArgs(ValidationKey.class, "key = ?", key);
+
+         if (validationKeys.isEmpty()) {
+             throw new Exception("Invalid key");
+         }
+
+         ValidationKey vKey = validationKeys.get(0);
+
+         if (!vKey.getEmail().equals(email)) {
+             throw new Exception("Invalid key");
+         }
+    }
+
+//    public void transaction(int idUser, String type, TransactionFondDTO data) throws Exception {
+//        verifiateKey(data.getKey(), data.getEmail());
+//        Utilisateur u = findUtilisateurByEmail(data.getEmail());
+//
+//        if (u.getId_utilisateur() != idUser) {
+//            throw new Exception("Unauthorized transaction");
+//        }
+//
+//        if (type.equalsIgnoreCase("depot")) {
+//            depot(u, data.getSolde());
+//
+//        } else if (type.equalsIgnoreCase("retrait")) {
+//            retrait(u, data.getSolde());
+//        }
+//    }
+
+    public void demandeTransaction(int idUser, String type, TransactionFondDTO data) throws Exception {
         Utilisateur u = findUtilisateurByEmail(data.getEmail());
 
         if (u.getId_utilisateur() != idUser) {
-            throw new Exception("Unauthorized transaction");
+            throw new Exception("Unauthorized transaction, please retry login");
         }
-        
+
         if (type.equalsIgnoreCase("depot")) {
-            depot(u, data.getSolde());
+            demandeDepot(u, data.getSolde());
 
         } else if (type.equalsIgnoreCase("retrait")) {
-            retrait(u, data.getSolde());
+            demandeRetrait(u, data.getSolde());
         }
     }
 
@@ -196,9 +259,8 @@ public class UserService extends Service {
 
         String validationHtml = MailService.generateEmailHtml(vKey.getKey());
         try {
-            //MailService.sendEmail(u.getEmail(), validationHtml);
+            MailService.sendEmail(u.getEmail(), validationHtml);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new Exception("Email not sent");
         }
         
@@ -242,8 +304,9 @@ public class UserService extends Service {
         Type up = getNgContext().findById(1, Type.class);
         
         double amountToPay = c.getValeur() * data.getQuantity();
-        // Commission commission = new CryptoService(getNgContext()).getCommission();
-        // amountToPay += (commission.getCommission_achat() * amountToPay) / 100;
+        double total = amountToPay;
+        Commission commission = new CryptoService(getNgContext()).getCommission();
+        amountToPay += (commission.getCommission_achat() * amountToPay) / 100;
 
         if (u.getMonnaie() < amountToPay) {
             throw new Exception("Not enough money");
@@ -255,11 +318,19 @@ public class UserService extends Service {
         trans.setDate_action(new Timestamp(System.currentTimeMillis()));
         trans.setQtty(data.getQuantity());
         trans.setType(up);
+        trans.setCommission(commission.getCommission_achat());
+        trans.setTotal(total);
+        trans.setTotal_with_commission(amountToPay);
         
-        getNgContext().save(trans);
+        int id = (int) getNgContext().save(trans);
 
         u.setMonnaie(u.getMonnaie() - amountToPay);
         getNgContext().update(u);
+
+        trans.setId_transaction_crypto(id);
+
+        // sauvegarde a firebase
+        FirebaseService.saveTransaction(trans, u.getEmail());
     }
 
     public void sellCrypto(TransactionCryptoDTO data, int idUser) throws Exception {
@@ -281,8 +352,9 @@ public class UserService extends Service {
         Type down = getNgContext().findById(2, Type.class);
         
         double amountToEarn = c.getValeur() * data.getQuantity();
-        // Commission commission = new CryptoService(getNgContext()).getCommission();
-        // amountToEarn -= (commission.getCommission_vente() * amountToEarn) / 100;
+        double total = amountToEarn;
+        Commission commission = new CryptoService(getNgContext()).getCommission();
+        amountToEarn -= (commission.getCommission_vente() * amountToEarn) / 100;
 
         Portefeuille p = getUserWallet(u.getId_utilisateur(), crypto.getId_crypto());
         if (p.getQuantite() < data.getQuantity()) {
@@ -295,11 +367,17 @@ public class UserService extends Service {
         trans.setDate_action(new Timestamp(System.currentTimeMillis()));
         trans.setQtty(data.getQuantity());
         trans.setType(down);
+        trans.setCommission(commission.getCommission_vente());
+        trans.setTotal(total);
+        trans.setTotal_with_commission(amountToEarn);
         
         getNgContext().save(trans);
 
         u.setMonnaie(u.getMonnaie() + amountToEarn);
         getNgContext().update(u);
+
+        // sauvegarde a firebase
+        FirebaseService.saveTransaction(trans, u.getEmail());
     }
 
     public void feedback(FeedbackDTO feed, int idUser) throws Exception {
@@ -325,5 +403,56 @@ public class UserService extends Service {
         }
 
         return coms.get(0);
+    }
+
+    public List<Operation> getAllOperations() throws Exception {
+        return getAll(Operation.class);
+    }
+    public List<Operation> getAllOperations(int idUtilisateur) throws Exception {
+        return getNgContext().findWhereArgs(Operation.class, "id_utilisateur = ?", idUtilisateur);
+    }
+
+    public List<Operation> getAllOperationsC(int idC) throws Exception {
+        return getNgContext().findWhereArgs(Operation.class, "id_crypto = ?", idC);
+    }
+
+    public List<Operation> getAllOperations(int idUtilisateur, int idCrypto) throws Exception {
+
+        if (idUtilisateur == 0 && idCrypto == 0) {
+            return getAllOperations();
+        } else if (idUtilisateur != 0 && idCrypto == 0) {
+            return getAllOperations(idUtilisateur);
+        } else if (idUtilisateur == 0 && idCrypto != 0) {
+            return getAllOperationsC(idCrypto);
+        }
+        return getNgContext().findWhereArgs(Operation.class, "id_utilisateur = ? and id_crypto = ?", idUtilisateur, idCrypto);
+    }
+
+    public List<TransactionCryptoCpl> getAllTransactionCryptoCpl() throws Exception {
+        return getNgContext().findWhen(TransactionCryptoCpl.class, "order by date_action desc");
+    }
+
+    public List<TransactionCryptoCpl> getAllTransactionCryptoCpl(int idu) throws Exception {
+        return getNgContext().findWhereArgs(TransactionCryptoCpl.class, "id_utilisateur = ? order by date_action desc", idu);
+    }
+
+    public List<TransactionCryptoCpl> getAllTransactionCryptoCpl(int idu, int idCrypto) throws Exception {
+        return getNgContext().findWhereArgs(TransactionCryptoCpl.class, "id_utilisateur = ? and id_crypto = ? order by date_action desc", idu, idCrypto);
+    }
+
+    public List<TransactionCryptoCpl> getAllTransactionCryptoCplByCrypto(int idCrypto) throws Exception {
+        return getNgContext().findWhereArgs(TransactionCryptoCpl.class, "id_crypto = ? order by date_action desc", idCrypto);
+    }
+
+    public List<TransactionCryptoCpl> getTransactions(int idUtilisateur, int idCrypto) throws Exception {
+
+        if (idUtilisateur == 0 && idCrypto == 0) {
+            return getAllTransactionCryptoCpl();
+        } else if (idUtilisateur != 0 && idCrypto == 0) {
+            return getAllTransactionCryptoCpl(idUtilisateur);
+        } else if (idUtilisateur == 0 && idCrypto != 0) {
+            return getAllTransactionCryptoCplByCrypto(idCrypto);
+        }
+        return getAllTransactionCryptoCpl(idUtilisateur, idCrypto);
     }
 }

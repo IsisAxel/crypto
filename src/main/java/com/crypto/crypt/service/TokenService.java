@@ -13,17 +13,15 @@ public class TokenService extends Service {
         List<SessionUser> sessions = getNgContext().findWhereArgs(SessionUser.class, "token = ?", token);
         
         if (sessions.isEmpty()) {
-            System.out.println("tonga atooo");
             return false;
         }
 
         SessionUser session = sessions.get(0);
-        System.out.println("Expiration = " + session.getExpiration());
-
-        // if (System.currentTimeMillis() > session.getExpiration().getTime()) {
-        //     return false;
-        // }
-
+         if (System.currentTimeMillis() > session.getExpiration().getTime()) {
+             System.out.println("Expiration = " + session.getExpiration());
+             System.out.println("Expired Token");
+             return false;
+         }
         return true;
     }
 }

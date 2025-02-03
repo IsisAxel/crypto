@@ -3,7 +3,7 @@ package com.crypto.crypt.model.tiers;
 import org.entityframework.tools.Primary;
 import org.entityframework.tools.Table;
 
-@Table(name = "key_validation_email")
+@Table("key_validation_email")
 public class ValidationKey {
     @Primary(auto = true)
     private int id_validation;

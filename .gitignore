@@ -29,5 +29,8 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# Ignorer le fichier de configuration Firebase
+src/main/resources/firebase.json
+
 ### VS Code ###
 .vscode/

@@ -47,7 +47,6 @@ public class IdentityProviderService {
                 .status(response.getStatusCode())
                 .body(response.getBody() != null ? response.getBody() : Map.of("message", "Pas de contenu"));
         } catch (HttpClientErrorException ex) {
-            System.out.println((String) ex.getResponseBodyAsString());
             String responseBody = ex.getResponseBodyAsString();
 
             if (responseBody == null || responseBody.isBlank()) {
@@ -111,6 +110,7 @@ public class IdentityProviderService {
                 userService.beginTransaction();
 
                 int id_utilisateur = userService.saveUser(user);
+                user.setId_utilisateur(id_utilisateur);
 
                 String token = jwtUtil.generateToken(String.valueOf(id_utilisateur));
                 String f_token = dataObject.getString("token");
@@ -120,6 +120,8 @@ public class IdentityProviderService {
                 userService.createSession(session);
 
                 dataObject.put("token", token);
+
+                new FirebaseService().saveUser(user);
 
                 userService.commit();
                 userService.endTransaction();
@@ -136,8 +138,6 @@ public class IdentityProviderService {
 
     public ResponseEntity<?> extractUser(ResponseEntity<?> rp) throws Exception {
         String responseBody = (String) rp.getBody();
-        
-        System.out.println(responseBody);
 
         JSONObject jsonResponse = new JSONObject(responseBody);
         boolean isSuccess = jsonResponse.getBoolean("isSuccess");

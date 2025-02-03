@@ -1,9 +1,11 @@
 package com.crypto.crypt.model;
 
 import java.util.List;
+import java.util.Map;
 
 import org.entityframework.tools.Col;
 import org.entityframework.tools.Primary;
+import org.entityframework.tools.Transient;
 
 public class Utilisateur {
     @Primary(auto = true)
@@ -12,14 +14,34 @@ public class Utilisateur {
     private String nom;
     private String email;
     private double monnaie;
+    private String imageUrl;
 
-    @Col(isTransient = true)
+    public Map<String, Object> toFirebaseMap() {
+        return Map.of(
+                "id_utilisateur", getId_utilisateur(),
+                "f_id", getF_id(),
+                "nom", getNom(),
+                "email", getEmail(),
+                "monnaie", getMonnaie(),
+                "imageUrl", "0"
+        );
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    @Transient
     private PortefeuilleUser portefeuille;
 
-    @Col(isTransient = true)
+    @Transient
     private List<TransactionFond> transactionFond;
 
-    @Col(isTransient = true)
+    @Transient
     private List<TransactionCrypto> transactionCryptos;
 
     public List<TransactionCrypto> getTransactionCryptos() {

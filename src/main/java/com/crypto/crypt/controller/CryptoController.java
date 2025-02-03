@@ -3,6 +3,7 @@ package com.crypto.crypt.controller;
 import com.crypto.crypt.model.Cour;
 import com.crypto.crypt.model.Crypto;
 import com.crypto.crypt.model.tiers.Commission;
+import com.crypto.crypt.service.AdminService;
 import com.crypto.crypt.service.CryptoService;
 import org.entityframework.dev.ApiResponse;
 import org.entityframework.http.TokenRequired;
@@ -29,7 +30,7 @@ public class CryptoController {
             ApiResponse response = new ApiResponse(true, files, null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
@@ -42,7 +43,7 @@ public class CryptoController {
             ApiResponse response = new ApiResponse(true, files, null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
@@ -55,12 +56,12 @@ public class CryptoController {
             ApiResponse response = new ApiResponse(true, files, null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
 
-    @TokenRequired
+    //@TokenRequired
     @GetMapping("/commission")
     public ResponseEntity<ApiResponse> comm() {
         try (CryptoService cryptoService = new CryptoService()) {
@@ -68,12 +69,12 @@ public class CryptoController {
             ApiResponse response = new ApiResponse(true, data, null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
 
-    @TokenRequired
+    //@TokenRequired
     @PutMapping("/commission")
     public ResponseEntity<ApiResponse> modifCommission(@RequestBody Commission comm) {
         try (CryptoService cryptoService = new CryptoService()) {
@@ -81,7 +82,55 @@ public class CryptoController {
             ApiResponse response = new ApiResponse(true, "", null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    //@TokenRequired
+    @GetMapping("/demande/list")
+    public ResponseEntity<ApiResponse> listeDemande() {
+        try (AdminService service = new AdminService()) {
+            Object data = service.getDemandesAttente();
+            ApiResponse response = new ApiResponse(true, data, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    //@TokenRequired
+    @PutMapping("/demande/valider/{id}")
+    public ResponseEntity<ApiResponse> valider(@PathVariable int id) {
+        try (AdminService service = new AdminService()) {
+            service.beginTransaction();
+            service.repondre(id, true);
+
+            service.endTransaction();
+            service.commit();
+            ApiResponse response = new ApiResponse(true, "", null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    //@TokenRequired
+    @PutMapping("/demande/refuser/{id}")
+    public ResponseEntity<ApiResponse> refuser(@PathVariable int id) {
+        try (AdminService service = new AdminService()) {
+            service.beginTransaction();
+
+            service.repondre(id, false);
+
+            service.endTransaction();
+            service.commit();
+            ApiResponse response = new ApiResponse(true, "", null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }

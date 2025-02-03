@@ -1,12 +1,16 @@
 package com.crypto.crypt.service;
 
 import com.crypto.crypt.dao.DataSource;
+import com.google.cloud.firestore.Firestore;
+import com.google.firebase.cloud.FirestoreClient;
 import jakarta.annotation.PreDestroy;
 import org.entityframework.client.GenericEntity;
 
+import java.net.InetAddress;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 public class Service implements AutoCloseable {
     private final GenericEntity ngContext;
@@ -17,6 +21,10 @@ public class Service implements AutoCloseable {
         } catch (Exception e) {
             throw new IllegalStateException("Erreur lors de l'initialisation du service", e);
         }
+    }
+
+    public Service(boolean auto) {
+        ngContext = null;
     }
 
     public Service(Connection connection) {
@@ -61,4 +69,18 @@ public class Service implements AutoCloseable {
     public <T> List<T> getAll(Class<T> tClass) throws Exception {
         return getNgContext().findAll(tClass);
     }
+
+    public Firestore getFirestore() {
+        return FirestoreClient.getFirestore();
+    }
+
+    public static boolean isOnlineMode() {
+        try {
+            InetAddress address = InetAddress.getByName("google.com");
+            return !address.equals("");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

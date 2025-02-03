@@ -15,14 +15,14 @@ public class Crypto {
         this.unit_nom = unit_nom;
     }
 
-    private String logo;
+    private String url;
 
-    public String getLogo() {
-        return logo;
+    public String getUrl() {
+        return url;
     }
 
-    public void setLogo(String logo) {
-        this.logo = logo;
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public int getId_crypto() {
