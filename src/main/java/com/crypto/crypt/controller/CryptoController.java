@@ -134,4 +134,23 @@ public class CryptoController {
             return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
         }
     }
+
+
+    //@TokenRequired
+    @PutMapping("/demande/annuler/{id}")
+    public ResponseEntity<ApiResponse> annuler(@PathVariable int id) {
+        try (AdminService service = new AdminService()) {
+            service.beginTransaction();
+
+            service.supprimerDemande(id);
+
+            service.endTransaction();
+            service.commit();
+            ApiResponse response = new ApiResponse(true, "", null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
 }

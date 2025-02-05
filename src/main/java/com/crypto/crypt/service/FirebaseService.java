@@ -30,23 +30,20 @@ public class FirebaseService extends Service {
         saveData("Utilisateurs", u.getId_utilisateur(), data);
     }
 
-    public void saveDemande(DemandeTransaction dt) throws Exception {
-        Firestore db = getFirestore();
+    public static void updateUserMonnaie(int userId, double newMonnaie) throws Exception {
+        Firestore db = FirestoreClient.getFirestore();
+        db.collection("Utilisateurs")
+                .document(String.valueOf(userId))
+                .update("monnaie", newMonnaie)
+                .get();
+    }
 
-        String collectionName = "Demandes";
-        String documentId = String.valueOf(dt.getId_demande());
-
-        Map<String, Object> data = Map.of(
-                "id_demande_transaction_fond", dt.getId_demande(),
-                "id_utilisateur", dt.getUtilisateur().getId_utilisateur(),
-                "valeur", dt.getValeur(),
-                "id_type", dt.getType().getId_type(),
-                "date_demande", dt.getDate_demande(),
-                "date_reponse", dt.getDate_reponse(),
-                "id_etat", dt.getEtat().getId_etat()
-        );
-
-        db.collection(collectionName).document(documentId).set(data).get();
+    public static void updateDemande(int idDemande, String etat) throws Exception {
+        Firestore db = FirestoreClient.getFirestore();
+        db.collection("Demandes")
+                .document(String.valueOf(idDemande))
+                .update("etat", etat)
+                .get();
     }
 
     public static void sendNotification(DemandeTransaction demande, boolean estValider, double newBalance) {
@@ -56,7 +53,7 @@ public class FirebaseService extends Service {
         }
 
         String title = estValider ? "Congrats !" : "Sorry !";
-        String type = demande.getType().getEtat().equalsIgnoreCase("up") ? "deposit" : "withdrawal";
+        String type = demande.getType().getEtat().equalsIgnoreCase("up") ? "deposit" : "withdraw";
         String body = estValider
                 ? "The administrator has accepted your " + type + " request of " + demande.getValeur()
                 : "The administrator refused your " + type + " request of " + demande.getValeur();

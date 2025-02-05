@@ -33,6 +33,7 @@ public class AdminService extends Service {
         getNgContext().update(dt);
 
         if (!estValider) {
+            FirebaseService.updateDemande(dt.getId_demande(), e.getDesignation());
             FirebaseService.sendNotification(dt, estValider, dt.getUtilisateur().getMonnaie());
             return;
         }
@@ -51,6 +52,21 @@ public class AdminService extends Service {
         }
 
         Utilisateur updatedU = getNgContext().findById(dt.getUtilisateur().getId_utilisateur(), Utilisateur.class);
+
+        FirebaseService.updateUserMonnaie(updatedU.getId_utilisateur(), updatedU.getMonnaie());
+        FirebaseService.updateDemande(dt.getId_demande(), e.getDesignation());
         FirebaseService.sendNotification(dt, true, updatedU.getMonnaie());
+    }
+
+
+
+    public void supprimerDemande(int idDemande) throws Exception {
+        DemandeTransaction dt = getNgContext().findById(idDemande, DemandeTransaction.class);
+
+        Etat supprimer = getNgContext().findById(4, Etat.class);
+        dt.setEtat(supprimer);
+
+        getNgContext().update(dt);
+        FirebaseService.updateDemande(dt.getId_demande(), supprimer.getDesignation());
     }
 }

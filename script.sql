@@ -83,6 +83,8 @@ CREATE TABLE etat (
 INSERT INTO ETAT (designation) values ('attente');
 INSERT INTO ETAT (designation) values ('valider');
 INSERT INTO ETAT (designation) values ('anuller');
+INSERT INTO ETAT (designation) values ('supprimer');
+
 
 CREATE TABLE demande_transaction_fond (
       id_demande_transaction_fond SERIAL PRIMARY KEY ,
@@ -196,7 +198,7 @@ BEGIN
             dernier_cours.valeur := 10000;
         END IF;
 
-        variation := (random() * 2) - 1; 
+        variation := (random() * 0.02) - 0.01;
         dernier_cours.valeur := dernier_cours.valeur * (1 + variation);
 
         INSERT INTO cour (id_crypto, valeur, date_changement)

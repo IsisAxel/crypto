@@ -27,7 +27,7 @@ public class TransactionCrypto {
     private double qtty;
 
     public Map<String, Object> toFirebaseMap(String email) {
-        String type = (getType().getEtat().equalsIgnoreCase("up")) ? "deposit" : "withdraw";
+        String type = (getType().getEtat().equalsIgnoreCase("up")) ? "buy" : "sell";
         return Map.of(
                 "id_transaction_crypto", getId_transaction_crypto(),
                 "crypto", getCrypto(),

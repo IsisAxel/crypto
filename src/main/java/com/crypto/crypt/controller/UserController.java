@@ -83,7 +83,7 @@ public class UserController {
         }
     }
 
-    @TokenRequired
+    //@TokenRequired
     @PostMapping("/depot")
     public ResponseEntity<ApiResponse> depot(@RequestHeader("Authorization") String authorizationHeader, @RequestBody TransactionFondDTO data) {
         try (UserService uService = new UserService()) {

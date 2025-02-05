@@ -13,6 +13,7 @@ import com.crypto.crypt.model.tiers.ValidationKey;
 import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.entityframework.client.GenericEntity;
@@ -51,7 +52,7 @@ public class UserService extends Service {
         getNgContext().save(transactionFond);
     }
 
-    public void demandeDepot(Utilisateur u, double valeur) throws Exception {
+    public DemandeTransaction demandeDepot(Utilisateur u, double valeur) throws Exception {
         Type up = getNgContext().findById(1, Type.class);
         Etat attente = getNgContext().findById(1, Etat.class);
 
@@ -69,6 +70,8 @@ public class UserService extends Service {
 
         int id = (int) getNgContext().save(dt);
         dt.setId_demande(id);
+
+        return dt;
     }
 
     public void retrait(Utilisateur u, double valeur, int idDemande) throws Exception {
@@ -88,7 +91,7 @@ public class UserService extends Service {
         getNgContext().save(transactionFond);
     }
 
-    public void demandeRetrait(Utilisateur u, double valeur) throws Exception {
+    public DemandeTransaction demandeRetrait(Utilisateur u, double valeur) throws Exception {
         Type down = getNgContext().findById(2, Type.class);
 
         int countDemande = getNgContext().count(DemandeTransaction.class, "id_utilisateur = ? and id_etat = ?", u.getId_utilisateur(), 1);
@@ -109,7 +112,10 @@ public class UserService extends Service {
         dt.setUtilisateur(u);
         dt.setEtat(attente);
 
-        getNgContext().save(dt);
+        int id = (int) getNgContext().save(dt);
+        dt.setId_demande(id);
+
+        return dt;
     }
 
     private void verifiateKey(String key, String email) throws Exception {
@@ -149,12 +155,18 @@ public class UserService extends Service {
             throw new Exception("Unauthorized transaction, please retry login");
         }
 
+        DemandeTransaction dt = null;
         if (type.equalsIgnoreCase("depot")) {
-            demandeDepot(u, data.getSolde());
+            dt = demandeDepot(u, data.getSolde());
 
         } else if (type.equalsIgnoreCase("retrait")) {
-            demandeRetrait(u, data.getSolde());
+            dt = demandeRetrait(u, data.getSolde());
+        } else {
+            throw new Exception("An error has occured");
         }
+
+        Map<String, Object> donne = dt.toFirebaseMap();
+        FirebaseService.saveData("Demandes", dt.getId_demande(), donne);
     }
 
     public int saveUser(Utilisateur u) throws Exception {
@@ -330,6 +342,7 @@ public class UserService extends Service {
         trans.setId_transaction_crypto(id);
 
         // sauvegarde a firebase
+        FirebaseService.updateUserMonnaie(u.getId_utilisateur(), u.getMonnaie());
         FirebaseService.saveTransaction(trans, u.getEmail());
     }
 
@@ -377,6 +390,7 @@ public class UserService extends Service {
         getNgContext().update(u);
 
         // sauvegarde a firebase
+        FirebaseService.updateUserMonnaie(u.getId_utilisateur(), u.getMonnaie());
         FirebaseService.saveTransaction(trans, u.getEmail());
     }
 

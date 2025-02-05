@@ -6,6 +6,7 @@ import org.entityframework.tools.Primary;
 import org.entityframework.tools.Table;
 
 import java.sql.Timestamp;
+import java.util.Map;
 
 @Table("demande_transaction_fond")
 public class DemandeTransaction {
@@ -24,6 +25,18 @@ public class DemandeTransaction {
     @FK(Type.class)
     @Col("id_type")
     private Type type;
+
+    public Map<String, Object> toFirebaseMap() {
+        String type = (getType().getEtat().equalsIgnoreCase("up")) ? "deposit" : "withdraw";
+        return Map.of(
+            "id_demande", getId_demande(),
+            "email", getUtilisateur().getEmail(),
+            "valeur", getValeur(),
+            "date_demande", new Timestamp(getDate_demande().getTime()),
+            "type", type,
+            "etat", getEtat().getDesignation()
+        );
+    }
 
     public int getId_demande() {
         return id_demande;

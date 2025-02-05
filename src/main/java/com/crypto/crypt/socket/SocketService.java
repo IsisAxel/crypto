@@ -27,7 +27,7 @@ public class SocketService {
 
     private List<Cour> derniersCours = new ArrayList<>(); 
 
-    @Scheduled(fixedRate = 200000)
+    @Scheduled(fixedRate = 20000)
     public void generateAndBroadcastCours() {
         try {
             repository.generateCours();
