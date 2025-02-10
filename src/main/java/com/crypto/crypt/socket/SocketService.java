@@ -3,6 +3,7 @@ package com.crypto.crypt.socket;
 import com.crypto.crypt.model.Cour;
 import com.crypto.crypt.model.CourLine;
 import com.crypto.crypt.service.CryptoService;
+import com.google.cloud.Timestamp;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -27,7 +28,7 @@ public class SocketService {
 
     private List<Cour> derniersCours = new ArrayList<>(); 
 
-    @Scheduled(fixedRate = 20000)
+    @Scheduled(fixedRate = 10000)
     public void generateAndBroadcastCours() {
         try {
             repository.generateCours();
@@ -58,6 +59,7 @@ public class SocketService {
             System.out.println("Generating");
             webSocketHandler.sendMessage(message);
 
+            updateFirebaseCourbes(courLines);
             updateFirebaseDatabase(courLines);
 
         } catch (Exception e) {
@@ -84,6 +86,7 @@ public class SocketService {
                 courLineMap.put("crypto", courLine.getCrypto());
                 courLineMap.put("valeur", courLine.getValeur());
                 courLineMap.put("variation", courLine.getVariation());
+                courLineMap.put("time", Timestamp.of(courLine.getDate_changement()));
 
                 courLinesData.add(courLineMap);
             }
@@ -95,6 +98,35 @@ public class SocketService {
                     System.out.println("Firebase Realtime updated");
                 }
             });
+
+        } catch (Exception e) {
+            System.out.println("Error : " + e.getMessage());
+        }
+    }
+
+    private void updateFirebaseCourbes(List<CourLine> courLines) {
+        try {
+            if (!com.crypto.crypt.service.Service.isOnlineMode()) {
+                System.out.println("No internet Connection. Cannot update Courbe RealTime Database");
+                return;
+            }
+
+            DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("Courbes");
+
+            for (CourLine courLine : courLines) {
+                Map<String, Object> courLineMap = new HashMap<>();
+                courLineMap.put("id_crypto", courLine.getCrypto().getId_crypto());
+                courLineMap.put("valeur", courLine.getValeur());
+                courLineMap.put("time", Timestamp.of(courLine.getDate_changement()));
+
+                dbRef.push().setValue(courLineMap, (databaseError, databaseReference) -> {
+                    if (databaseError != null) {
+                        System.out.println("Error : " + databaseError.getMessage());
+                    }
+                });
+            }
+
+            System.out.println("Courbe added");
 
         } catch (Exception e) {
             System.out.println("Error : " + e.getMessage());

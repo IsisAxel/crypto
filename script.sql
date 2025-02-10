@@ -88,6 +88,7 @@ INSERT INTO ETAT (designation) values ('supprimer');
 
 CREATE TABLE demande_transaction_fond (
       id_demande_transaction_fond SERIAL PRIMARY KEY ,
+      key TEXT NOT NULL,
       id_utilisateur int references utilisateur(id_utilisateur),
       valeur NUMERIC not null,
       id_type INT REFERENCES type(id_type),
@@ -125,6 +126,14 @@ CREATE TABLE commission(
 );
 
 INSERT INTO commission (commission_achat, commission_vente) VALUES (2 , 2);
+
+CREATE TABLE crypto_favori (
+    id_crypto_favori SERIAL PRIMARY KEY ,
+    key TEXT NOT NULL,
+    id_crypto INT REFERENCES crypto(id_crypto) NOT NULL ,
+    id_utilisateur int references utilisateur(id_utilisateur) NOT NULL ,
+    UNIQUE (id_crypto, id_utilisateur)
+);
 
 
 CREATE OR REPLACE FUNCTION update_fond()
@@ -195,7 +204,7 @@ BEGIN
         LIMIT 1;
 
         IF NOT FOUND THEN
-            dernier_cours.valeur := 10000;
+            dernier_cours.valeur := 20000;
         END IF;
 
         variation := (random() * 0.02) - 0.01;
@@ -249,6 +258,62 @@ FROM
     transaction_fond tf
 ORDER BY
     date_action DESC;
+
+CREATE VIEW v_user_analyse AS
+SELECT
+    u.id_utilisateur,
+    COALESCE(SUM(CASE WHEN t.id_type = 1 THEN t.total_with_commission END), 0) AS total_achat,
+    COALESCE(SUM(CASE WHEN t.id_type = 2 THEN t.total_with_commission END), 0) AS total_vente
+FROM utilisateur u
+         LEFT JOIN transaction_crypto t ON u.id_utilisateur = t.id_utilisateur
+GROUP BY u.id_utilisateur;
+
+CREATE OR REPLACE FUNCTION get_user_analyse(p_max_date TIMESTAMP)
+    RETURNS TABLE (
+                      id_utilisateur INT,
+                      total_achat NUMERIC,
+                      total_vente NUMERIC
+                  ) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT
+            u.id_utilisateur,
+            COALESCE(SUM(CASE WHEN t.id_type = 1 THEN t.total_with_commission END), 0) AS total_achat,
+            COALESCE(SUM(CASE WHEN t.id_type = 2 THEN t.total_with_commission END), 0) AS total_vente
+        FROM utilisateur u
+                 LEFT JOIN transaction_crypto t
+                           ON u.id_utilisateur = t.id_utilisateur
+                               AND t.date_action <= p_max_date
+        GROUP BY u.id_utilisateur;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_favorite_emails(p_id_crypto INT)
+    RETURNS TABLE(email TEXT) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT u.email::TEXT
+        FROM crypto_favori cf
+                 JOIN utilisateur u ON cf.id_utilisateur = u.id_utilisateur
+        WHERE cf.id_crypto = p_id_crypto;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_favorite_emails_ex(p_idCrypto INT, p_idUserToExclude INT)
+    RETURNS TABLE(email TEXT) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT u.email::TEXT
+        FROM crypto_favori cf
+                 JOIN utilisateur u ON cf.id_utilisateur = u.id_utilisateur
+        WHERE cf.id_crypto = p_idCrypto
+          AND cf.id_utilisateur != p_idUserToExclude;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
 
 
 

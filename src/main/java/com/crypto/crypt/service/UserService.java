@@ -1,9 +1,11 @@
 package com.crypto.crypt.service;
 
+import com.crypto.crypt.err.NoInternetConnectionException;
 import com.crypto.crypt.model.*;
 import com.crypto.crypt.model.dto.FeedbackDTO;
 import com.crypto.crypt.model.dto.TransactionCryptoDTO;
 import com.crypto.crypt.model.dto.TransactionFondDTO;
+import com.crypto.crypt.model.dto.UserAnalysis;
 import com.crypto.crypt.model.tiers.Commission;
 import com.crypto.crypt.model.tiers.Feedback;
 import com.crypto.crypt.model.tiers.Portefeuille;
@@ -11,13 +13,17 @@ import com.crypto.crypt.model.tiers.SessionUser;
 import com.crypto.crypt.model.tiers.ValidationKey;
 
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 import org.entityframework.client.GenericEntity;
 import org.entityframework.error.EntityNotFoundException;
+import org.entityframework.tools.RowResult;
 
 public class UserService extends Service {
     public UserService() {
@@ -52,13 +58,21 @@ public class UserService extends Service {
         getNgContext().save(transactionFond);
     }
 
+    private int getNewDemandeReference() throws Exception {
+        RowResult rs = getNgContext().execute("select ref from demande_transaction_fond order by ref desc limit 1");
+        if (rs.next()) {
+            return rs.getInt(1) + 1;
+        }
+        return 1;
+    }
+
     public DemandeTransaction demandeDepot(Utilisateur u, double valeur) throws Exception {
         Type up = getNgContext().findById(1, Type.class);
         Etat attente = getNgContext().findById(1, Etat.class);
 
         int countDemande = getNgContext().count(DemandeTransaction.class, "id_utilisateur = ? and id_etat = ?", u.getId_utilisateur(), 1);
         if (countDemande != 0) {
-            throw new Exception("Veuillez attendre que l'administrateur repond à votre derniere demande");
+            throw new Exception("Please wait for the administrator to respond to your last request");
         }
 
         DemandeTransaction dt = new DemandeTransaction();
@@ -67,6 +81,7 @@ public class UserService extends Service {
         dt.setValeur(valeur);
         dt.setUtilisateur(u);
         dt.setEtat(attente);
+        dt.setKey("0");
 
         int id = (int) getNgContext().save(dt);
         dt.setId_demande(id);
@@ -96,7 +111,7 @@ public class UserService extends Service {
 
         int countDemande = getNgContext().count(DemandeTransaction.class, "id_utilisateur = ? and id_etat = ?", u.getId_utilisateur(), 1);
         if (countDemande != 0) {
-            throw new Exception("Veuillez attendre que l'administrateur repond à votre derniere demande");
+            throw new Exception("Please wait for the administrator to respond to your last request");
         }
 
         if (u.getMonnaie() < valeur) {
@@ -111,6 +126,7 @@ public class UserService extends Service {
         dt.setValeur(valeur);
         dt.setUtilisateur(u);
         dt.setEtat(attente);
+        dt.setKey("0");
 
         int id = (int) getNgContext().save(dt);
         dt.setId_demande(id);
@@ -149,6 +165,9 @@ public class UserService extends Service {
 //    }
 
     public void demandeTransaction(int idUser, String type, TransactionFondDTO data) throws Exception {
+        if (!Service.isOnlineMode())
+            throw new NoInternetConnectionException();
+
         Utilisateur u = findUtilisateurByEmail(data.getEmail());
 
         if (u.getId_utilisateur() != idUser) {
@@ -166,7 +185,10 @@ public class UserService extends Service {
         }
 
         Map<String, Object> donne = dt.toFirebaseMap();
-        FirebaseService.saveData("Demandes", dt.getId_demande(), donne);
+        String id = FirebaseService.saveDataG("Demandes", donne);
+        dt.setKey(id);
+
+        getNgContext().update(dt);
     }
 
     public int saveUser(Utilisateur u) throws Exception {
@@ -189,7 +211,7 @@ public class UserService extends Service {
         List<Utilisateur> Utilisateurs = getNgContext().findWhereArgs(Utilisateur.class, "f_id = ?", f_id);
 
         if (Utilisateurs.isEmpty()) {
-            throw new Exception("Utilisateur avec f_id = " + f_id + " introuvable");
+            return null;
         }
 
         return Utilisateurs.get(0);
@@ -199,7 +221,7 @@ public class UserService extends Service {
         List<Utilisateur> Utilisateurs = getNgContext().findWhereArgs(Utilisateur.class, "email = ?", email);
 
         if (Utilisateurs.isEmpty()) {
-            throw new Exception("Utilisateur avec email = " + email + " introuvable");
+            throw new Exception("User with email : " + email + " not found");
         }
 
         return Utilisateurs.get(0); 
@@ -209,7 +231,7 @@ public class UserService extends Service {
         List<Utilisateur> Utilisateurs = getNgContext().findWhereArgs(Utilisateur.class, "id_utilisateur = ?", id);
 
         if (Utilisateurs.isEmpty()) {
-            throw new Exception("Utilisateur avec id_utilisateur = " + id + " introuvable");
+            throw new Exception("User with id : " + id + " not found");
         }
 
         return Utilisateurs.get(0);
@@ -280,24 +302,39 @@ public class UserService extends Service {
         getNgContext().save(vKey);
     }
 
-    private static String generateHash() throws Exception {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        Random random = new Random();
-        StringBuilder input = new StringBuilder();
-        for (int i = 0; i < 10; i++) { 
-            input.append((char)(random.nextInt(26) + 'a')); 
-        }
-        byte[] hashBytes = digest.digest(input.toString().getBytes());
+    public static String generateHash() {
+        String chars = "ABCDEF0123GHIJKLMNOPWXYZabc456defghijklmnopqQRSTUVrstuvwxyz789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder key = new StringBuilder(6);
 
-        StringBuilder hash = new StringBuilder();
-        for (byte b : hashBytes) {
-            hash.append(String.format("%02x", b));
+        for (int i = 0; i < 6; i++) {
+            key.append(chars.charAt(random.nextInt(chars.length())));
         }
 
-        return hash.toString().replaceAll("[^a-zA-Z0-9]", "").substring(0, 30);         
+        return key.toString();
     }
 
+//    private static String generateHash() throws Exception {
+//        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+//        Random random = new Random();
+//        StringBuilder input = new StringBuilder();
+//        for (int i = 0; i < 10; i++) {
+//            input.append((char)(random.nextInt(26) + 'a'));
+//        }
+//        byte[] hashBytes = digest.digest(input.toString().getBytes());
+//
+//        StringBuilder hash = new StringBuilder();
+//        for (byte b : hashBytes) {
+//            hash.append(String.format("%02x", b));
+//        }
+//
+//        return hash.toString().replaceAll("[^a-zA-Z0-9]", "").substring(0, 30);
+//    }
+
     public void buyCrypto(TransactionCryptoDTO data, int idUser) throws Exception {
+        if (!Service.isOnlineMode())
+            throw new NoInternetConnectionException();
+
         Utilisateur u = findUtilisateur(idUser);
         verifiateKey(data.getKey(), u.getEmail());
         
@@ -335,18 +372,30 @@ public class UserService extends Service {
         trans.setTotal_with_commission(amountToPay);
         
         int id = (int) getNgContext().save(trans);
+        trans.setId_transaction_crypto(id);
 
         u.setMonnaie(u.getMonnaie() - amountToPay);
         getNgContext().update(u);
 
-        trans.setId_transaction_crypto(id);
-
         // sauvegarde a firebase
         FirebaseService.updateUserMonnaie(u.getId_utilisateur(), u.getMonnaie());
+        FirebaseService.updateFirebaseWallet(trans, u.getEmail());
         FirebaseService.saveTransaction(trans, u.getEmail());
+
+        CompletableFuture.runAsync(() -> {
+            try (UserService userService = new UserService()){
+                RowResult rs = userService.getSubscribedEmail(trans.getCrypto().getId_crypto(), u.getId_utilisateur());
+                FirebaseService.sendNotificationToSubscribedCrypto(trans, u.getNom(), rs);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
+        });
     }
 
     public void sellCrypto(TransactionCryptoDTO data, int idUser) throws Exception {
+        if (!Service.isOnlineMode())
+            throw new NoInternetConnectionException();
+
         Utilisateur u = findUtilisateur(idUser);
         verifiateKey(data.getKey(), u.getEmail());
         
@@ -384,14 +433,25 @@ public class UserService extends Service {
         trans.setTotal(total);
         trans.setTotal_with_commission(amountToEarn);
         
-        getNgContext().save(trans);
+        int id = (int) getNgContext().save(trans);
+        trans.setId_transaction_crypto(id);
 
         u.setMonnaie(u.getMonnaie() + amountToEarn);
         getNgContext().update(u);
 
         // sauvegarde a firebase
         FirebaseService.updateUserMonnaie(u.getId_utilisateur(), u.getMonnaie());
+        FirebaseService.updateFirebaseWallet(trans, u.getEmail());
         FirebaseService.saveTransaction(trans, u.getEmail());
+
+        CompletableFuture.runAsync(() -> {
+            try (UserService userService = new UserService()){
+                RowResult rs = userService.getSubscribedEmail(trans.getCrypto().getId_crypto(), u.getId_utilisateur());
+                FirebaseService.sendNotificationToSubscribedCrypto(trans, u.getNom(), rs);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
+        });
     }
 
     public void feedback(FeedbackDTO feed, int idUser) throws Exception {
@@ -468,5 +528,72 @@ public class UserService extends Service {
             return getAllTransactionCryptoCplByCrypto(idCrypto);
         }
         return getAllTransactionCryptoCpl(idUtilisateur, idCrypto);
+    }
+
+    public DemandeTransaction getDemandeAttente(int idU) throws Exception {
+        // 1 = etat attente
+        return getNgContext().firstOrNull(DemandeTransaction.class, "id_utilisateur = ? and id_etat = ?", idU, 1);
+    }
+
+    public UtilisateurFavori getUtilisateurFavori(int idU) throws Exception {
+        Utilisateur u = getUser(idU);
+        List<Crypto> cs = new ArrayList<>();
+        RowResult rs = getNgContext().execute("select id_crypto from crypto_favori where id_utilisateur = ?", u.getId_utilisateur());
+        while (rs.next()) {
+            cs.add(getNgContext().findById(rs.getInt("id_crypto"), Crypto.class));
+        }
+        return new UtilisateurFavori(u.getId_utilisateur(), cs);
+    }
+
+    public boolean isFavoris(int idU, int idC) throws Exception {
+        int count = getNgContext().count("crypto_favori", "id_crypto = ? and id_utilisateur = ?", idC, idU);
+        return count != 0;
+    }
+
+    public void ajouterAuFavori(int idU, int idC) throws Exception {
+        if (!Service.isOnlineMode())
+            throw new NoInternetConnectionException();
+
+        Utilisateur u = getUser(idU);
+        CryptoFavori cf = new CryptoFavori();
+        cf.setKey("0");
+        cf.setId_utilisateur(idU);
+        cf.setId_crypto(idC);
+
+        int id = (int) getNgContext().save(cf);
+        cf.setId_crypto_favori(id);
+
+        Map<String, Object> data = cf.toFirebaseMap(u.getEmail());
+        String key =  FirebaseService.saveDataG("Favoris", data);
+
+        cf.setKey(key);
+        getNgContext().update(cf);
+    }
+
+    public void retirerDuFavori(int idU, int idC) throws Exception {
+        if (!Service.isOnlineMode())
+            throw new NoInternetConnectionException();
+
+        CryptoFavori cf = getNgContext().firstOrNull(CryptoFavori.class, "id_utilisateur = ? and id_crypto = ?", idU, idC);
+        if (cf != null) {
+            String key = cf.getKey();
+
+            getNgContext().delete(cf);
+            FirebaseService.deleteDoc("Favoris", key);
+        }
+    }
+
+    public List<UserAnalysis> getUserAnalyse() throws Exception {
+        System.out.println("oke 1");
+        return getAll(UserAnalysis.class);
+    }
+
+    public List<UserAnalysis> getUserAnalyse(Timestamp dateMax) throws Exception {
+        System.out.println("oke 2");
+        return getNgContext().executeToList(UserAnalysis.class, "select * from get_user_analyse(?)", dateMax);
+    }
+
+    public RowResult getSubscribedEmail(int idCrypto, int idRestreint) throws Exception {
+        return getNgContext().execute("SELECT * FROM get_favorite_emails_ex(?, ?)", idCrypto, idRestreint);
     }
 }

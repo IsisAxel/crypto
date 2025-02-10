@@ -24,7 +24,7 @@ public class AdminService extends Service {
 
         //1 = etat attente
         if (dt.getEtat().getId_etat() != 1) {
-            throw new Exception("Demande déja repondu");
+            throw new Exception("Request already answered or deleted");
         }
 
         dt.setEtat(e);
@@ -33,7 +33,7 @@ public class AdminService extends Service {
         getNgContext().update(dt);
 
         if (!estValider) {
-            FirebaseService.updateDemande(dt.getId_demande(), e.getDesignation());
+            FirebaseService.updateDemande(dt.getKey(), e.getDesignation());
             FirebaseService.sendNotification(dt, estValider, dt.getUtilisateur().getMonnaie());
             return;
         }
@@ -54,7 +54,7 @@ public class AdminService extends Service {
         Utilisateur updatedU = getNgContext().findById(dt.getUtilisateur().getId_utilisateur(), Utilisateur.class);
 
         FirebaseService.updateUserMonnaie(updatedU.getId_utilisateur(), updatedU.getMonnaie());
-        FirebaseService.updateDemande(dt.getId_demande(), e.getDesignation());
+        FirebaseService.updateDemande(dt.getKey(), e.getDesignation());
         FirebaseService.sendNotification(dt, true, updatedU.getMonnaie());
     }
 
@@ -63,10 +63,14 @@ public class AdminService extends Service {
     public void supprimerDemande(int idDemande) throws Exception {
         DemandeTransaction dt = getNgContext().findById(idDemande, DemandeTransaction.class);
 
+        if (dt.getEtat().getId_etat() != 1) {
+            throw new Exception("Request already answered");
+        }
+
         Etat supprimer = getNgContext().findById(4, Etat.class);
         dt.setEtat(supprimer);
 
         getNgContext().update(dt);
-        FirebaseService.updateDemande(dt.getId_demande(), supprimer.getDesignation());
+        FirebaseService.updateDemande(dt.getKey(), supprimer.getDesignation());
     }
 }

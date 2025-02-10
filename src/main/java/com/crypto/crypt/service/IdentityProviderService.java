@@ -147,8 +147,20 @@ public class IdentityProviderService {
             JSONObject userObject = dataObject.optJSONObject("user");
 
             int f_id = userObject.getInt("idUser");
+            boolean needToSave = false;
             try (UserService userService = new UserService()) {
+                userService.beginTransaction();
+
                 Utilisateur user = userService.findUtilisateurF(f_id);
+                if (user == null) {
+                    needToSave = true;
+                    String nom = userObject.getString("username");
+                    String email = userObject.getString("email");
+
+                    user = new Utilisateur(f_id, nom, email);
+                    int id_utilisateur = userService.saveUser(user);
+                    user.setId_utilisateur(id_utilisateur);
+                }
                 int id_utilisateur = user.getId_utilisateur();
 
                 String token = jwtUtil.generateToken(String.valueOf(id_utilisateur));
@@ -159,6 +171,13 @@ public class IdentityProviderService {
                 userService.createSession(session);
 
                 dataObject.put("token", token);
+
+                if (needToSave) {
+                    new FirebaseService().saveUser(user);
+                }
+
+                userService.commit();
+                userService.endTransaction();
 
                 return ResponseEntity
                 .status(rp.getStatusCode()) 

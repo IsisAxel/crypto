@@ -13,6 +13,7 @@ public class DemandeTransaction {
     @Primary(auto = true)
     @Col("id_demande_transaction_fond")
     private int id_demande;
+    private String key;
     @FK(Utilisateur.class)
     @Col("id_utilisateur")
     private Utilisateur utilisateur;
@@ -36,6 +37,14 @@ public class DemandeTransaction {
             "type", type,
             "etat", getEtat().getDesignation()
         );
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public int getId_demande() {

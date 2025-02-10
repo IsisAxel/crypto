@@ -9,7 +9,13 @@ import org.entityframework.client.GenericEntity;
 import java.net.InetAddress;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class Service implements AutoCloseable {
@@ -83,4 +89,19 @@ public class Service implements AutoCloseable {
         }
     }
 
+    public Timestamp inputToTimestamp(String dateStr) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+        LocalDateTime localDateTime = LocalDateTime.parse(dateStr, formatter);
+        return Timestamp.valueOf(localDateTime);
+    }
+
+    public static String formatDouble(double value) {
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
+        symbols.setGroupingSeparator(' ');
+
+        DecimalFormat df = new DecimalFormat("#,##0.00", symbols);
+        df.setRoundingMode(java.math.RoundingMode.FLOOR);
+
+        return df.format(Math.floor(value * 100) / 100);
+    }
 }

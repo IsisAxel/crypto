@@ -5,16 +5,11 @@ import com.crypto.crypt.model.Crypto;
 import com.crypto.crypt.model.tiers.Commission;
 import com.crypto.crypt.service.AdminService;
 import com.crypto.crypt.service.CryptoService;
+import com.crypto.crypt.service.FirebaseService;
 import org.entityframework.dev.ApiResponse;
 import org.entityframework.http.TokenRequired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -147,6 +142,18 @@ public class CryptoController {
             service.endTransaction();
             service.commit();
             ApiResponse response = new ApiResponse(true, "", null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @DeleteMapping("/firebase/tables/{tableName}")
+    public ResponseEntity<ApiResponse> deleteTable(@PathVariable String tableName) {
+        try {
+            FirebaseService.deleteTable(tableName);
+            ApiResponse response = new ApiResponse(true, true, null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             System.err.println(e.getMessage());

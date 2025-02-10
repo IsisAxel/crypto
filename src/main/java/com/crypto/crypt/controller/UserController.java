@@ -2,6 +2,7 @@ package com.crypto.crypt.controller;
 
 import com.crypto.crypt.model.Operation;
 import org.entityframework.dev.ApiResponse;
+import org.entityframework.dev.Metric;
 import org.entityframework.http.TokenRequired;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,8 @@ import com.crypto.crypt.model.dto.TransactionCryptoDTO;
 import com.crypto.crypt.model.dto.TransactionFondDTO;
 import com.crypto.crypt.model.tiers.Portefeuille;
 import com.crypto.crypt.service.UserService;
+
+import java.sql.Timestamp;
 
 @RestController
 @RequestMapping("/crypto/user")
@@ -83,7 +86,7 @@ public class UserController {
         }
     }
 
-    //@TokenRequired
+    @TokenRequired
     @PostMapping("/depot")
     public ResponseEntity<ApiResponse> depot(@RequestHeader("Authorization") String authorizationHeader, @RequestBody TransactionFondDTO data) {
         try (UserService uService = new UserService()) {
@@ -223,12 +226,121 @@ public class UserController {
         }
     }
 
-    //@TokenRequired
+    @TokenRequired
     @GetMapping("/transactions")
     public ResponseEntity<ApiResponse> getTransactions(@RequestParam(value = "idu", required = false, defaultValue = "0") int idu, @RequestParam(value = "idc", required = false, defaultValue = "0") int idc) {
         try (UserService uService = new UserService()) {
             Object data = uService.getTransactions(idu, idc);
             ApiResponse response = new ApiResponse(true, data, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    // admin
+    @GetMapping("/transactions/group")
+    public ResponseEntity<ApiResponse> getTransactionsGroup(@RequestParam(value = "date", required = false, defaultValue = "0") String date) {
+        try (UserService uService = new UserService()) {
+            Object data;
+
+            if (date.equalsIgnoreCase("0")) {
+                data = uService.getUserAnalyse();
+            } else {
+                Timestamp dateMax = uService.inputToTimestamp(date);
+                data = uService.getUserAnalyse(dateMax);
+            }
+            ApiResponse response = new ApiResponse(true, data, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+
+    //@TokenRequired
+    @GetMapping("/demande/attente")
+    public ResponseEntity<ApiResponse> getDemandeAttente(@RequestHeader("Authorization") String authorizationHeader) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+
+            Object data = uService.getDemandeAttente(id);
+            ApiResponse response = new ApiResponse(true, data, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @GetMapping("/favoris")
+    public ResponseEntity<ApiResponse> getCryptoFavoris(@RequestHeader("Authorization") String authorizationHeader) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+
+            Object data = uService.getUtilisateurFavori(id);
+            ApiResponse response = new ApiResponse(true, data, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @GetMapping("/favoris/{idCrypto}")
+    public ResponseEntity<ApiResponse> isFavoris(@RequestHeader("Authorization") String authorizationHeader, @PathVariable int idCrypto) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+
+            Object data = uService.isFavoris(id, idCrypto);
+            ApiResponse response = new ApiResponse(true, data, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @PutMapping("/favoris/add/{idCrypto}")
+    public ResponseEntity<ApiResponse> ajouterFavoris(@RequestHeader("Authorization") String authorizationHeader, @PathVariable int idCrypto) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+
+            uService.beginTransaction();
+            uService.ajouterAuFavori(id, idCrypto);
+
+            uService.endTransaction();
+            uService.commit();
+            ApiResponse response = new ApiResponse(true, true, null);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return ResponseEntity.internalServerError().body(ApiResponse.Of(e));
+        }
+    }
+
+    @TokenRequired
+    @PutMapping("/favoris/rem/{idCrypto}")
+    public ResponseEntity<ApiResponse> retirerFavoris(@RequestHeader("Authorization") String authorizationHeader, @PathVariable int idCrypto) {
+        try (UserService uService = new UserService()) {
+            String token = authorizationHeader.replace("Bearer ", "");
+            int id = Integer.parseInt(jwtUtil.extractSubject(token));
+
+            uService.beginTransaction();
+            uService.retirerDuFavori(id, idCrypto);
+
+            uService.endTransaction();
+            uService.commit();
+            ApiResponse response = new ApiResponse(true, true, null);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             System.err.println(e.getMessage());

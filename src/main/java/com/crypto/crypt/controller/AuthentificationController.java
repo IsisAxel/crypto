@@ -14,8 +14,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/crypto/auth")
 public class AuthentificationController {
-    // private static final String AUTH_URL = "http://fast_auth:5000";
-    private static final String AUTH_URL = "http://localhost:5000";
+    private static final String AUTH_URL = "http://fast_auth:5000";
+    //private static final String AUTH_URL = "http://localhost:5000";
 
     @Autowired
     private IdentityProviderService identityProviderService;
@@ -38,7 +38,7 @@ public class AuthentificationController {
         String identityProviderUrl = AUTH_URL + "/api/User/confirm?key=" + key; 
         
         try {
-            ResponseEntity<?> rp = identityProviderService.directCall(identityProviderUrl, HttpMethod.POST);
+            ResponseEntity<?> rp = identityProviderService.directCall(identityProviderUrl, HttpMethod.PUT);
             ResponseEntity<?> result = identityProviderService.extractAndPersistUser(rp);
 
             return result;
@@ -64,7 +64,7 @@ public class AuthentificationController {
     public ResponseEntity<?> confirmPin(@RequestBody Map<String, Object> requestBody) {
         String identityProviderUrl = AUTH_URL + "/api/User/auth"; 
         try {
-            ResponseEntity<?> rp = identityProviderService.directCall(identityProviderUrl, HttpMethod.POST, requestBody);
+            ResponseEntity<?> rp = identityProviderService.directCall(identityProviderUrl, HttpMethod.PUT, requestBody);
             ResponseEntity<?> result = identityProviderService.extractUser(rp);
 
             return result;
@@ -89,6 +89,6 @@ public class AuthentificationController {
     @PostMapping("/reset")
     public ResponseEntity<?> reset(@RequestParam String key) {
         String identityProviderUrl = AUTH_URL + "/api/User/reset?key=" + key; 
-        return identityProviderService.directCall(identityProviderUrl, HttpMethod.POST);
+        return identityProviderService.directCall(identityProviderUrl, HttpMethod.PUT);
     }
 }
